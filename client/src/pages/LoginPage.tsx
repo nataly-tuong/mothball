@@ -1,11 +1,15 @@
 import type { JSX } from "react";
 import { FcGoogle } from "react-icons/fc";
 import MothballSVG from "../assets/favicon.svg";
+import BgImage from "../assets/dddepth-061.jpg";
 
 export default function LoginPage(): JSX.Element {
   return (
-    <main className="flex items-center justify-center bg-lavender min-h-screen align-middle">
-      <div className="flex flex-1 flex-col items-center justify-center min-h-screen">
+    <main className="flex min-h-screen">
+      <div
+        className="flex flex-1 flex-col items-center justify-center min-h-screen bg-lavender/60 bg-blend-overlay bg-cover bg-center"
+        style={{ backgroundImage: `url(${BgImage})` }}
+      >
         <img
           src={MothballSVG}
           className="mx-auto w-40"
