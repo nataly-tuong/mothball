@@ -42,21 +42,34 @@ export default function LoginPage(): JSX.Element {
             className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-4"
           />
 
-          <div className="flex items-center justify-between mb-1">
-            <label htmlFor="password" className="text-plum font-bold">
-              Password
-            </label>
-            <a href="" className="text-sm text-lilac font-medium">
-              Forgot password?
-            </a>
-          </div>
+          <label htmlFor="password" className="text-plum font-bold mb-1">
+            Password
+          </label>
           <input
             id="password"
             name="password"
             type="password"
             placeholder="your password"
-            className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-5"
+            className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-3"
           />
+
+          <div className="flex items-center justify-between mb-10">
+            <label
+              htmlFor="remember"
+              className="flex items-center gap-2 text-sm text-plum cursor-pointer"
+            >
+              <input
+                id="remember"
+                name="remember"
+                type="checkbox"
+                className="w-4 h-4 accent-plum cursor-pointer"
+              />
+              Remember me
+            </label>
+            <a href="" className="text-sm text-lilac font-medium">
+              Forgot password?
+            </a>
+          </div>
 
           <button
             type="submit"
