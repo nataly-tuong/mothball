@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Chango&family=Climate+Crisis:YEAR@1979&family=Fredoka:wght@300..700&family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Gaegu&family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -9,6 +9,8 @@
   --color-lavender-gray: #d9d0e5;
   --color-ink: #29233a;
   --color-coral: #d95f70;
+  --font-gaegu: "Gaegu", comic-sans;
+  --font-fredoka: "Fredoka", sans-serif;
 }
 
 body {
