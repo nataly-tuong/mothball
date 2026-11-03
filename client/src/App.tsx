@@ -1,3 +1,10 @@
-export default function App() {
-  return <h1 className="text-3xl font-bold">Hi</h1>;
+import type { JSX } from "react";
+import LoginPage from "./pages/LoginPage";
+
+export default function App(): JSX.Element {
+  return (
+    <>
+      <LoginPage />
+    </>
+  );
 }

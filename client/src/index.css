@@ -1,1 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Chango&family=Climate+Crisis:YEAR@1979&family=Fredoka:wght@300..700&family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-lilac: #a984e8;
+  --color-plum: #39245f;
+  --color-lavender: #f0e9fa;
+  --color-ivory: #fffefc;
+  --color-lavender-gray: #d9d0e5;
+  --color-ink: #29233a;
+  --color-coral: #d95f70;
+}
+
+body {
+  font-family: "Hanken Grotesk", sans-serif;
+}
