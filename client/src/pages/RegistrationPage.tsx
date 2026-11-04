@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import { FcGoogle } from "react-icons/fc";
 import MothballSVG from "../assets/favicon.svg";
 import BgImage from "../assets/dddepth-060.jpg";
+import { Link } from "react-router-dom";
 
 export default function RegistrationPage(): JSX.Element {
   return (
@@ -34,6 +35,17 @@ export default function RegistrationPage(): JSX.Element {
           <h2 className="text-3xl font-fredoka w-full font-medium text-plum mb-6">
             Sign Up
           </h2>
+
+          <label htmlFor="email" className="text-plum font-bold mb-1">
+            Name
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="jane"
+            className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-4"
+          />
 
           <label htmlFor="email" className="text-plum font-bold mb-1">
             Email
@@ -91,9 +103,11 @@ export default function RegistrationPage(): JSX.Element {
 
           <p className="text-center text-plum/50 mt-6">
             Have an account?{" "}
-            <a href="" className="text-lilac">
-              Log in
-            </a>
+            <Link to={"/login"}>
+              <a href="" className="text-lilac">
+                Log in
+              </a>
+            </Link>
           </p>
         </form>
       </div>

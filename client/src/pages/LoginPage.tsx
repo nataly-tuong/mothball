@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import { FcGoogle } from "react-icons/fc";
 import MothballSVG from "../assets/favicon.svg";
 import BgImage from "../assets/dddepth-061.jpg";
+import { Link } from "react-router-dom";
 
 export default function LoginPage(): JSX.Element {
   return (
@@ -98,9 +99,11 @@ export default function LoginPage(): JSX.Element {
 
           <p className="text-center text-plum/50 mt-6">
             Don't have an account?{" "}
-            <a href="" className="text-lilac">
-              Sign up
-            </a>
+            <Link to={"/register"}>
+              <a href="" className="text-lilac">
+                Sign up
+              </a>
+            </Link>
           </p>
         </form>
       </div>
