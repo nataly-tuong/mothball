@@ -8,7 +8,7 @@ export default function LoginPage(): JSX.Element {
   return (
     <main className="flex min-h-screen">
       <div
-        className="flex flex-1 flex-col items-center justify-center min-h-screen bg-lavender/60 bg-blend-overlay bg-cover bg-center"
+        className="flex flex-1  m-4 py-10 rounded-2xl flex-col items-center justify-center bg-lavender/60 bg-blend-overlay bg-cover bg-center"
         style={{ backgroundImage: `url(${BgImage})` }}
       >
         <img
@@ -26,11 +26,12 @@ export default function LoginPage(): JSX.Element {
           Syncs inventory.
         </h2>
         <p className="text-plum">
-          "Uh,which one again? idk. oh <span className="italic">that one</span>"
+          "Uh, which one again? idk. oh <span className="italic">that one</span>
+          "
         </p>
       </div>
 
-      <div className="flex flex-col bg-white flex-1 min-h-screen px-10 items-center justify-center">
+      <div className="flex flex-col bg-white flex-1 px-10 items-center justify-center">
         <form className="flex flex-col w-full max-w-md px-5">
           <h2 className="text-3xl font-fredoka w-full font-medium text-plum mb-6">
             Log in
