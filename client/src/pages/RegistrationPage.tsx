@@ -78,12 +78,12 @@ export default function RegistrationPage(): JSX.Element {
             name="password"
             type="password"
             placeholder="your password"
-            className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-3"
+            className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-5"
           />
 
           <button
             type="submit"
-            className="bg-plum text-white py-2.5 rounded-lg text-sm font-medium"
+            className="bg-plum text-white py-2.5 rounded-lg text-sm font-medium hover:bg-plum/80 cursor-pointer"
           >
             Register
           </button>
@@ -96,7 +96,7 @@ export default function RegistrationPage(): JSX.Element {
 
           <button
             type="button"
-            className="flex items-center justify-center gap-2 border border-lavender-gray bg-white text-plum py-2.5 rounded-lg text-sm font-medium hover:bg-lavender/40"
+            className="flex cursor-pointer items-center justify-center gap-2 border border-lavender-gray bg-white text-plum py-2.5 rounded-lg text-sm font-medium hover:bg-lavender/40"
           >
             <FcGoogle className="w-5 h-5" />
             Continue with Google

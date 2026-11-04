@@ -79,7 +79,7 @@ export default function LoginPage(): JSX.Element {
 
           <button
             type="submit"
-            className="bg-plum text-white py-2.5 rounded-lg text-sm font-medium"
+            className="bg-plum hover:bg-plum/80 cursor-pointer text-white py-2.5 rounded-lg text-sm font-medium"
           >
             Log in
           </button>
@@ -92,7 +92,7 @@ export default function LoginPage(): JSX.Element {
 
           <button
             type="button"
-            className="flex items-center justify-center gap-2 border border-lavender-gray bg-white text-plum py-2.5 rounded-lg text-sm font-medium hover:bg-lavender/40"
+            className="flex items-center cursor-pointer justify-center gap-2 border border-lavender-gray bg-white text-plum py-2.5 rounded-lg text-sm font-medium hover:bg-lavender/40"
           >
             <FcGoogle className="w-5 h-5" />
             Continue with Google
