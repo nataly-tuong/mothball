@@ -26,33 +26,33 @@ export default function App(): JSX.Element {
       </header>
 
       <section
-        className="flex flex-1 flex-col items-center justify-center text-center px-20 ml-3 mr-2 mb-3 rounded-2xl bg-lavender/60 bg-blend-overlay bg-cover bg-center"
+        className="flex flex-1 flex-col items-center justify-center text-center px-6 md:px-20 ml-3 mr-2 mb-3 py-10 rounded-2xl bg-lavender/60 bg-blend-overlay bg-cover bg-center"
         style={{ backgroundImage: `url(${BgImage})` }}
       >
         <CoatHangerIcon
-          size={220}
+          size={150}
           weight="fill"
-          className="mx-auto mb-2 text-plum"
+          className="mx-auto mb-4 text-plum"
           aria-hidden="true"
         />
-        <h1 className="text-3xl text-center text-plum font-bold">
+        <h1 className="text-4xl md:text-5xl text-center text-plum font-bold">
           One closet, multiple people
         </h1>
-        <h1 className="text-3xl text-center text-plum font-bold mb-3">
+        <h1 className="text-4xl md:text-5xl text-center text-plum font-bold mb-4">
           Zero duplicates.
         </h1>
-        <p className="text-plum/80 mb-7">
+        <p className="text-lg md:text-xl text-plum/80 mb-8 max-w-xl">
           Share one closet and always know what's listed and what's still
           waiting to be uploaded.
         </p>
         <div className="flex gap-3">
           <Link to="/register">
-            <button className="bg-plum text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-plum/80">
+            <button className="bg-plum text-white px-6 py-3 rounded-xl text-base font-medium hover:bg-plum/80">
               Get Started
             </button>
           </Link>
           <Link to="/login">
-            <button className="border border-plum text-plum px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50/50">
+            <button className="border-2 border-plum text-plum px-6 py-3 rounded-xl text-base font-medium hover:bg-white/50">
               Login
             </button>
           </Link>
