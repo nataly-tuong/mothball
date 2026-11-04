@@ -18,7 +18,7 @@ export default function NotFoundPage(): JSX.Element {
         </h2>
         <p className="text-plum/80 font-fredoka mb-3">Let's get you back!</p>
         <Link to={"/"}>
-          <button className="bg-plum text-white py-2.5 px-10 rounded-lg text-sm font-medium hover:bg-plum/80">
+          <button className="bg-plum cursor-pointer text-white py-2.5 px-10 rounded-lg text-sm font-medium hover:bg-plum/80">
             Back to closet
           </button>
         </Link>
