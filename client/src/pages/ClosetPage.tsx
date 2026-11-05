@@ -1,8 +1,15 @@
 import type { JSX } from "react";
+import { useEffect } from "react";
 import MothballSVG from "../assets/favicon.svg";
 import BgImage from "../assets/dddepth-267.jpg";
 
 export default function ClosetPage(): JSX.Element {
+  useEffect(() => {
+    fetch("/api/items")
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+  }, []);
+
   return (
     <main className="flex flex-col min-h-screen">
       <header className="flex items-center justify-between gap-2 pt-1 px-4">
