@@ -1,10 +1,49 @@
-import type { JSX } from "react";
+import type { SubmitEvent, JSX } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function LoginPage(): JSX.Element {
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+
+    const form = new FormData(e.currentTarget);
+    const email = form.get("email");
+    const password = form.get("password");
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setError(data?.message ?? "Something went wrong. Please try again");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      navigate("/closet");
+    } catch {
+      setError("Can't reach the server. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <form className="flex flex-col w-full max-w-md px-5">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col w-full max-w-md px-5"
+    >
       <h2 className="text-3xl font-fredoka w-full font-medium text-plum mb-6">
         Log in
       </h2>
@@ -49,11 +88,14 @@ export default function LoginPage(): JSX.Element {
         </Link>
       </div>
 
+      {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+
       <button
         type="submit"
-        className="bg-plum hover:bg-plum/80 cursor-pointer text-white py-2.5 rounded-lg text-sm font-medium"
+        disabled={loading}
+        className="bg-plum text-white py-2.5 rounded-lg text-sm font-medium hover:bg-plum/80 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        Log in
+        {loading ? "Logging in..." : "Login"}
       </button>
 
       <div className="flex items-center gap-3 my-4">
