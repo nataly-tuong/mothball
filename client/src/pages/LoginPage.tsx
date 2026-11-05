@@ -25,7 +25,11 @@ export default function LoginPage(): JSX.Element {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          remember: form.get("remember") === "on",
+        }),
       });
       const data = await res.json().catch(() => null);
 

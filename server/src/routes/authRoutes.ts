@@ -87,7 +87,7 @@ router.post("/register", async (req: Request, res: Response) => {
 });
 
 router.post("/login", async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password, remember } = req.body;
 
   if (!email || !password) {
     res.status(400).send({ message: "Email and password are required" });
@@ -115,15 +115,22 @@ router.post("/login", async (req: Request, res: Response) => {
       return;
     }
 
+    const shouldRemember = remember === true;
+
+    const expiresIn = shouldRemember ? "30d" : "24h";
+
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
-      expiresIn: "24h",
+      expiresIn,
     });
+
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
+
+      ...(shouldRemember ? { maxAge: 30 * 24 * 60 * 60 * 1000 } : {}),
     });
+
     res.sendStatus(204);
   } catch (err) {
     if (err instanceof Error) {
