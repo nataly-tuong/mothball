@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import prisma from "../prismaClient.js";
+import { sendMail } from "../lib/mailer.js";
+import { welcomeEmailHtml } from "../emails/welcome.js";
 
 const router = express.Router();
 
@@ -26,6 +28,12 @@ router.post("/register", async (req: Request, res: Response) => {
         passwordHash: hashedPassword,
       },
     });
+
+    try {
+      await sendMail(user.email, "Welcome to Mothball!", welcomeEmailHtml);
+    } catch {
+      console.error("Welcome email failed to send");
+    }
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
       expiresIn: "24h",
