@@ -4,5 +4,6 @@ dist
 .env.*
 !.env.example
 src/generated
+cookies.txt
 
 /src/generated/prisma

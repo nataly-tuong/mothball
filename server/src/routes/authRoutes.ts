@@ -5,8 +5,30 @@ import type { Request, Response } from "express";
 import prisma from "../prismaClient.js";
 import { sendMail } from "../lib/mailer.js";
 import { welcomeEmailHtml } from "../emails/welcome.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+router.get("/me", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
+
+    if (!user) {
+      return res.sendStatus(404);
+    }
+
+    return res.json({ user });
+  } catch (error) {
+    console.error("Failed to fetch user:", error);
+    return res.sendStatus(500);
+  }
+});
 
 router.post("/register", async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
