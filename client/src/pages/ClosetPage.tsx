@@ -1,28 +1,38 @@
 import type { JSX } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import MothballSVG from "../assets/favicon.svg";
 import BgImage from "../assets/dddepth-267.jpg";
 
+const filters = [
+  { value: "all", label: "All" },
+  { value: "to-upload", label: "To upload" },
+  { value: "listed", label: "Listed" },
+  { value: "sold", label: "Sold" },
+] as const;
+
+type Filter = (typeof filters)[number]["value"];
+
 export default function ClosetPage(): JSX.Element {
+  const [filter, setFilter] = useState<Filter>("all");
+
   useEffect(() => {
     fetch("/api/items")
       .then((res) => res.json())
-      .then((data) => console.log(data));
+      .then((data) => console.log(data))
+      .catch((err) => console.error(err));
   }, []);
-
-  const filters: { value: string; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "to-upload", label: "To upload" },
-    { value: "listed", label: "Listed" },
-    { value: "sold", label: "Sold" },
-  ];
 
   const filterElements = filters.map(({ value, label }) => (
     <button
       type="button"
       key={value}
-      className="bg-plum text-white rounded-full whitespace-nowrap px-4 py-2 cursor-pointer hover:opacity-80 items-center "
+      onClick={() => setFilter(value)}
+      className={`rounded-full px-4 py-2 whitespace-nowrap cursor-pointer ${
+        filter === value
+          ? "bg-plum text-white"
+          : "border border-lavender-gray text-ink"
+      }`}
     >
       {label}
     </button>
@@ -39,11 +49,17 @@ export default function ClosetPage(): JSX.Element {
           <h1 className="text-3xl text-white font-gaegu font-bold">Mothball</h1>
         </div>
         <div className="flex gap-5">
-          <button className="text-white hover:opacity-80 cursor-pointer">
+          <button
+            type="button"
+            className="text-white hover:opacity-80 cursor-pointer"
+          >
             Nataly
           </button>
           <p className="text-white">|</p>
-          <button className="text-white hover:opacity-80 cursor-pointer">
+          <button
+            type="button"
+            className="text-white hover:opacity-80 cursor-pointer"
+          >
             Logout
           </button>
         </div>
@@ -53,30 +69,28 @@ export default function ClosetPage(): JSX.Element {
         <div className="flex justify-between">
           <h2 className="text-plum text-4xl font-bold">Our Closet</h2>
           <button
-            type="submit"
-            className="bg-plum cursor-pointer relative right-1 before:content-['+'] before:mr-2
-    text-white px-5 rounded-md py-2 hover:bg-plum/80"
+            type="button"
+            className="bg-plum cursor-pointer relative right-1 before:content-['+'] before:mr-2 text-white px-5 rounded-md py-2 hover:bg-plum/80"
           >
             New item
           </button>
         </div>
 
         <div className="flex justify-between gap-3">
-          <div className="relative w-full">
+          <div className="relative flex-1">
             <MagnifyingGlassIcon
               size={22}
               className="text-plum absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
               aria-hidden="true"
             />
-
             <input
-              aria-label="Add an item"
+              aria-label="Search items"
               type="text"
               placeholder="Search items"
               className="w-full rounded-md border border-lavender-gray pl-11 py-2 bg-white placeholder:text-gray-400"
             />
           </div>
-          {filterElements}
+          <div className="flex gap-2">{filterElements}</div>
         </div>
       </section>
     </main>
