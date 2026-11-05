@@ -4,6 +4,8 @@ import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import BgImage from "../assets/dddepth-267.jpg";
 import Navbar from "../components/Navbar";
 
+import placeholder from "../assets//pexels-thethomaseffect94-31794126.jpg";
+
 const filters = [
   { value: "all", label: "All" },
   { value: "to-upload", label: "To upload" },
@@ -65,6 +67,17 @@ export default function ClosetPage(): JSX.Element {
           </div>
           <div className="flex gap-2">{filterElements}</div>
         </div>
+
+        <div className="flex flex-1 flex-col border border-lavender-gray rounded-md max-h-[200px] max-w-[200px] overflow-hidden hover:shadow-sm">
+          <img src={placeholder} className="h-[50%]" />
+          <div className="p-3">
+            <h3 className="font-bold mb-4">A Titled Cow</h3>
+            <select className="border rounded-lg px-2 bg-lavender hover:opacity-50 cursor-pointer">
+              <option value="to upload">To upload</option>
+            </select>
+          </div>
+        </div>
+
       </section>
     </main>
   );
