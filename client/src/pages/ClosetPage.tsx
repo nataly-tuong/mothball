@@ -33,8 +33,8 @@ export default function ClosetPage(): JSX.Element {
           <h2 className="text-plum text-4xl font-bold">Our Closet</h2>
           <button
             type="submit"
-            className="bg-plum relative right-1 before:content-['+'] before:mr-2
-    text-white px-5 rounded-md py-2 hover:opacity-90"
+            className="bg-plum cursor-pointer relative right-1 before:content-['+'] before:mr-2
+    text-white px-5 rounded-md py-2 hover:bg-plum/80"
           >
             New item
           </button>
