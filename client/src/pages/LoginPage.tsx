@@ -2,9 +2,12 @@ import type { SubmitEvent, JSX } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage(): JSX.Element {
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +34,7 @@ export default function LoginPage(): JSX.Element {
         return;
       }
 
+      await refreshUser();
       navigate("/closet");
     } catch {
       setError("Can't reach the server. Please try again.");
