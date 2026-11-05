@@ -38,7 +38,7 @@ export default function Navbar() {
               type="button"
               className="text-white hover:opacity-80 cursor-pointer"
             >
-              {user.email}
+              {user.name}
             </button>
 
             <p className="text-white">|</p>
