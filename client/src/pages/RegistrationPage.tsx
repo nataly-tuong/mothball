@@ -28,6 +28,7 @@ export default function RegistrationPage(): JSX.Element {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json().catch(() => null);
@@ -37,7 +38,6 @@ export default function RegistrationPage(): JSX.Element {
         return;
       }
 
-      localStorage.setItem("token", data.token);
       navigate("/closet");
     } catch {
       setError("Can't reach the server. Please try again.");

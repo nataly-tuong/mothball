@@ -1,6 +1,7 @@
 import type { JSX } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { useNavigate } from "react-router-dom";
 import MothballSVG from "../assets/favicon.svg";
 import BgImage from "../assets/dddepth-267.jpg";
 
@@ -14,7 +15,25 @@ const filters = [
 type Filter = (typeof filters)[number]["value"];
 
 export default function ClosetPage(): JSX.Element {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>("all");
+
+  async function handleLogout() {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error("Logout failed");
+      }
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  }
 
   const filterElements = filters.map(({ value, label }) => (
     <button
@@ -51,6 +70,7 @@ export default function ClosetPage(): JSX.Element {
           <p className="text-white">|</p>
           <button
             type="button"
+            onClick={handleLogout}
             className="text-white hover:opacity-80 cursor-pointer"
           >
             Logout

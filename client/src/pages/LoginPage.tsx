@@ -21,6 +21,7 @@ export default function LoginPage(): JSX.Element {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json().catch(() => null);
@@ -30,7 +31,6 @@ export default function LoginPage(): JSX.Element {
         return;
       }
 
-      localStorage.setItem("token", data.token);
       navigate("/closet");
     } catch {
       setError("Can't reach the server. Please try again.");
