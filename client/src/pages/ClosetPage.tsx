@@ -19,9 +19,13 @@ export default function ClosetPage(): JSX.Element {
           <h1 className="text-3xl text-plum font-gaegu font-bold">Mothball</h1>
         </div>
         <div className="flex gap-5">
-          <button className="text-plum cursor-pointer">Nataly</button>
+          <button className="text-plum hover:opacity-80 cursor-pointer">
+            Nataly
+          </button>
           <p className="text-plum">|</p>
-          <button className="text-plum cursor-pointer">Logout</button>
+          <button className="text-plum hover:opacity-80 cursor-pointer">
+            Logout
+          </button>
         </div>
       </header>
 
@@ -52,7 +56,7 @@ export default function ClosetPage(): JSX.Element {
               aria-label="Add an item"
               type="text"
               placeholder="Search items"
-              className="w-full outline-none rounded-md border border-lavender-gray pl-11 py-2 bg-white placeholder:text-gray-400"
+              className="w-full rounded-md border border-lavender-gray pl-11 py-2 bg-white placeholder:text-gray-400"
             />
           </div>
         </div>
