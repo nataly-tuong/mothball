@@ -32,6 +32,16 @@ router.post("/register", async (req: Request, res: Response) => {
     });
     res.json({ token });
   } catch (err) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      err.code === "P2002"
+    ) {
+      res.status(409).send({ message: "Email already in use" });
+      return;
+    }
+
     if (err instanceof Error) {
       console.log(err.message);
     }
