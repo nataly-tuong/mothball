@@ -38,7 +38,13 @@ router.post("/register", async (req: Request, res: Response) => {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
       expiresIn: "24h",
     });
-    res.json({ token });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+    res.sendStatus(204);
   } catch (err) {
     if (
       typeof err === "object" &&
@@ -89,13 +95,23 @@ router.post("/login", async (req: Request, res: Response) => {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
       expiresIn: "24h",
     });
-    res.json({ token });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+    res.sendStatus(204);
   } catch (err) {
     if (err instanceof Error) {
       console.log(err.message);
     }
     res.sendStatus(503);
   }
+});
+
+router.post("/logout", async (req: Request, res: Response) => {
+  
 });
 
 export default router;
