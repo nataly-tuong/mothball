@@ -14,11 +14,18 @@ import ClosetPage from "./pages/ClosetPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
+import { SampleListings } from "./components/SampleListings";
+
 const router = createBrowserRouter([
   { path: "/", element: <App /> },
   {
     element: <ProtectedRoute />,
-    children: [{ path: "/closet", element: <ClosetPage /> }],
+    children: [
+      {
+        path: "/closet",
+        element: <ClosetPage sampleListing={SampleListings} />,
+      },
+    ],
   },
   {
     element: <AuthLayout />,

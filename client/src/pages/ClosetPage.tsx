@@ -4,7 +4,11 @@ import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import BgImage from "../assets/dddepth-267.jpg";
 import Navbar from "../components/Navbar";
 
-import placeholder from "../assets//pexels-thethomaseffect94-31794126.jpg";
+import type { SampleListing } from "../components/SampleListings";
+
+type SampleListingsProps = {
+  sampleListing: SampleListing[];
+};
 
 const filters = [
   { value: "all", label: "All" },
@@ -15,7 +19,9 @@ const filters = [
 
 type Filter = (typeof filters)[number]["value"];
 
-export default function ClosetPage(): JSX.Element {
+export default function ClosetPage({
+  sampleListing,
+}: SampleListingsProps): JSX.Element {
   const [filter, setFilter] = useState<Filter>("all");
 
   const filterElements = filters.map(({ value, label }) => (
@@ -32,6 +38,22 @@ export default function ClosetPage(): JSX.Element {
       {label}
     </button>
   ));
+
+  const cardElements = sampleListing.map(
+    (sampleListing: SampleListing): JSX.Element => {
+      return (
+        <div className="flex flex-1 flex-col border border-lavender-gray rounded-md max-h-50 max-w-50 overflow-hidden hover:shadow-sm">
+          <img src={sampleListing.imagePath} className="h-[50%]" />
+          <div className="p-3">
+            <h3 className="font-bold mb-4">{sampleListing.name}</h3>
+            <select className="border rounded-lg px-2 bg-lavender hover:opacity-50 cursor-pointer">
+              <option value="to upload">To upload</option>
+            </select>
+          </div>
+        </div>
+      );
+    },
+  );
 
   return (
     <main
@@ -68,16 +90,7 @@ export default function ClosetPage(): JSX.Element {
           <div className="flex gap-2">{filterElements}</div>
         </div>
 
-        <div className="flex flex-1 flex-col border border-lavender-gray rounded-md max-h-[200px] max-w-[200px] overflow-hidden hover:shadow-sm">
-          <img src={placeholder} className="h-[50%]" />
-          <div className="p-3">
-            <h3 className="font-bold mb-4">A Titled Cow</h3>
-            <select className="border rounded-lg px-2 bg-lavender hover:opacity-50 cursor-pointer">
-              <option value="to upload">To upload</option>
-            </select>
-          </div>
-        </div>
-
+        {cardElements}
       </section>
     </main>
   );
