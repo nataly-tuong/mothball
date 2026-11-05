@@ -11,6 +11,23 @@ export default function ClosetPage(): JSX.Element {
       .then((data) => console.log(data));
   }, []);
 
+  const filters: { value: string; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "to-upload", label: "To upload" },
+    { value: "listed", label: "Listed" },
+    { value: "sold", label: "Sold" },
+  ];
+
+  const filterElements = filters.map(({ value, label }) => (
+    <button
+      type="button"
+      key={value}
+      className="bg-plum text-white rounded-full whitespace-nowrap px-4 py-2 cursor-pointer hover:opacity-80 items-center"
+    >
+      {label}
+    </button>
+  ));
+
   return (
     <main className="flex flex-col min-h-screen">
       <header className="flex items-center justify-between gap-2 pt-1 px-4">
@@ -44,8 +61,8 @@ export default function ClosetPage(): JSX.Element {
           </button>
         </div>
 
-        <div className="flex">
-          <div className="relative w-full max-w-100">
+        <div className="flex justify-between gap-3">
+          <div className="relative w-full">
             <MagnifyingGlassIcon
               size={22}
               className="text-plum absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -59,6 +76,7 @@ export default function ClosetPage(): JSX.Element {
               className="w-full rounded-md border border-lavender-gray pl-11 py-2 bg-white placeholder:text-gray-400"
             />
           </div>
+          {filterElements}
         </div>
       </section>
     </main>
