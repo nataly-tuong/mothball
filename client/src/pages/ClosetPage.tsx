@@ -11,9 +11,9 @@ export default function ClosetPage(): JSX.Element {
           <h1 className="text-3xl text-plum font-gaegu font-bold">Mothball</h1>
         </div>
         <div className="flex gap-5">
-          <button className="text-plum">Nataly</button>
+          <button className="text-plum cursor-pointer">Nataly</button>
           <p className="text-plum">|</p>
-          <button className="text-plum">Logout</button>
+          <button className="text-plum cursor-pointer">Logout</button>
         </div>
       </header>
 
