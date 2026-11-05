@@ -16,22 +16,15 @@ type Filter = (typeof filters)[number]["value"];
 export default function ClosetPage(): JSX.Element {
   const [filter, setFilter] = useState<Filter>("all");
 
-  useEffect(() => {
-    fetch("/api/items")
-      .then((res) => res.json())
-      .then((data) => console.log(data))
-      .catch((err) => console.error(err));
-  }, []);
-
   const filterElements = filters.map(({ value, label }) => (
     <button
       type="button"
       key={value}
       onClick={() => setFilter(value)}
-      className={`rounded-full px-4 py-2 whitespace-nowrap cursor-pointer ${
+      className={`rounded-full px-4 py-2 whitespace-nowrap cursor-pointer  ${
         filter === value
-          ? "bg-plum text-white"
-          : "border border-lavender-gray text-ink"
+          ? "bg-plum text-white hover:bg-plum/85"
+          : "border border-lavender-gray text-ink hover:bg-lavender/50 hover:border-lilac hover:text-plum"
       }`}
     >
       {label}

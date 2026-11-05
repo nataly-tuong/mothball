@@ -47,12 +47,18 @@ export default function App(): JSX.Element {
         </p>
         <div className="flex gap-3">
           <Link to="/register">
-            <button className="bg-plum cursor-pointer text-white px-6 py-3 rounded-xl text-base font-medium hover:bg-plum/80">
+            <button
+              type="button"
+              className="bg-plum cursor-pointer text-white px-6 py-3 rounded-xl text-base font-medium hover:bg-plum/80"
+            >
               Get Started
             </button>
           </Link>
           <Link to="/login">
-            <button className="border-2 cursor-pointer border-plum text-plum px-6 py-3 rounded-xl text-base font-medium hover:bg-white/50">
+            <button
+              type="button"
+              className="border-2 cursor-pointer bg-white border-lavender-gray text-ink px-6 py-3 rounded-xl text-base font-medium hover:bg-lavender/50 hover:border-lilac hover:text-plum active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
+            >
               Login
             </button>
           </Link>
