@@ -8,9 +8,11 @@ import LoginPage from "./pages/LoginPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import ClosetPage from "./pages/ClosetPage";
 
 const router = createBrowserRouter([
   { path: "/", element: <App /> },
+  { path: "/closet", element: <ClosetPage /> },
   {
     element: <AuthLayout />,
     children: [
