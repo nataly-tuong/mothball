@@ -49,80 +49,81 @@ export default function LoginPage(): JSX.Element {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col w-full max-w-md px-5"
-    >
-      <h2 className="text-3xl font-fredoka w-full font-medium text-plum mb-6">
+    <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col">
+      <h2 className="mb-8 font-fredoka text-4xl font-medium text-plum">
         Log in
       </h2>
 
-      <label htmlFor="email" className="text-plum font-bold mb-1">
-        Email
-      </label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        placeholder="jane.doe@example.com"
-        className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-4"
-      />
+      <div className="mb-5 flex flex-col gap-1.5">
+        <label htmlFor="email" className="text-sm font-bold text-plum">
+          Email
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="jane.doe@example.com"
+          className="w-full rounded-lg border border-lavender-gray px-4 py-3 text-base"
+        />
+      </div>
 
-      <label htmlFor="password" className="text-plum font-bold mb-1">
-        Password
-      </label>
-      <PasswordInput
-        id="password"
-        name="password"
-        placeholder="your password"
-        autoComplete="current-password"
-        className="mb-3"
-      />
+      <div className="mb-4 flex flex-col gap-1.5">
+        <label htmlFor="password" className="text-sm font-bold text-plum">
+          Password
+        </label>
+        <PasswordInput
+          id="password"
+          name="password"
+          placeholder="your password"
+          autoComplete="current-password"
+        />
+      </div>
 
-      <div className="flex items-center justify-between mb-10">
+      <div className="mb-6 flex items-center justify-between">
         <label
           htmlFor="remember"
-          className="flex items-center gap-2 text-sm text-plum cursor-pointer"
+          className="flex cursor-pointer items-center gap-2 text-sm text-plum"
         >
           <input
             id="remember"
             name="remember"
             type="checkbox"
-            className="w-4 h-4 accent-plum cursor-pointer"
+            className="h-4 w-4 cursor-pointer accent-plum"
           />
           Remember me
         </label>
-        <Link to="/forgot-password" className="text-sm text-lilac font-medium">
+        <Link to="/forgot-password" className="text-sm font-medium text-lilac">
           Forgot password?
         </Link>
       </div>
 
-      {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
       <button
         type="submit"
-        className="w-full rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum py-2.5 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
+        disabled={loading}
+        className="w-full rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum py-3 text-base font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 disabled:active:scale-100"
       >
-        Log in
+        {loading ? "Logging in..." : "Log in"}
       </button>
 
-      <div className="flex items-center gap-3 my-4">
-        <div className="flex-1 h-px bg-lavender-gray" />
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-lavender-gray" />
         <span className="text-sm text-plum/60">or</span>
-        <div className="flex-1 h-px bg-lavender-gray" />
+        <div className="h-px flex-1 bg-lavender-gray" />
       </div>
 
       <button
         type="button"
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-plum/40 bg-gradient-to-b from-white to-lavender/60 py-2.5 text-sm font-medium text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum/60 hover:to-lavender hover:shadow-md hover:shadow-plum/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-plum/40 bg-gradient-to-b from-white to-lavender/60 py-3 text-base font-medium text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum/60 hover:to-lavender hover:shadow-md hover:shadow-plum/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
       >
-        <FcGoogle className="w-5 h-5" />
+        <FcGoogle className="h-5 w-5" />
         Continue with Google
       </button>
 
-      <p className="text-center text-plum/50 mt-6">
+      <p className="mt-8 text-center text-sm text-plum/70">
         Don't have an account?{" "}
-        <Link to="/register" className="text-lilac">
+        <Link to="/register" className="font-medium text-lilac">
           Sign up
         </Link>
       </p>

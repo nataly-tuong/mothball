@@ -52,87 +52,97 @@ export default function RegistrationPage(): JSX.Element {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col w-full max-w-md px-5"
-    >
-      <h2 className="text-3xl font-fredoka w-full font-medium text-plum mb-6">
+    <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col">
+      <h2 className="mb-8 font-fredoka text-4xl font-medium text-plum">
         Sign Up
       </h2>
 
-      <label htmlFor="name" className="text-plum font-bold mb-1">
-        Name
-      </label>
-      <input
-        id="name"
-        name="name"
-        type="text"
-        placeholder="jane"
-        className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-4"
-      />
+      <div className="mb-5 flex flex-col gap-1.5">
+        <label htmlFor="name" className="text-sm font-bold text-plum">
+          Name
+        </label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          placeholder="jane"
+          autoComplete="name"
+          required
+          className="w-full rounded-lg border border-lavender-gray px-4 py-3 text-base"
+        />
+      </div>
 
-      <label htmlFor="email" className="text-plum font-bold mb-1">
-        Email
-      </label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        placeholder="jane.doe@example.com"
-        className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-4"
-      />
+      <div className="mb-5 flex flex-col gap-1.5">
+        <label htmlFor="email" className="text-sm font-bold text-plum">
+          Email
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="jane.doe@example.com"
+          autoComplete="email"
+          required
+          className="w-full rounded-lg border border-lavender-gray px-4 py-3 text-base"
+        />
+      </div>
 
-      <label htmlFor="password" className="text-plum font-bold mb-1">
-        Password
-      </label>
-      <PasswordInput
-        id="password"
-        name="password"
-        placeholder="your password"
-        autoComplete="new-password"
-        required
-        className="mb-3"
-      />
+      <div className="mb-5 flex flex-col gap-1.5">
+        <label htmlFor="password" className="text-sm font-bold text-plum">
+          Password
+        </label>
+        <PasswordInput
+          id="password"
+          name="password"
+          placeholder="your password"
+          autoComplete="new-password"
+          required
+        />
+      </div>
 
-      <label htmlFor="confirmPassword" className="text-plum font-bold mb-1">
-        Confirm Password
-      </label>
-      <PasswordInput
-        id="confirmPassword"
-        name="confirmPassword"
-        placeholder="your password"
-        autoComplete="new-password"
-        required
-        className="mb-5"
-      />
+      <div className="mb-6 flex flex-col gap-1.5">
+        <label
+          htmlFor="confirmPassword"
+          className="text-sm font-bold text-plum"
+        >
+          Confirm Password
+        </label>
+        <PasswordInput
+          id="confirmPassword"
+          name="confirmPassword"
+          placeholder="your password"
+          autoComplete="new-password"
+          required
+        />
+      </div>
 
-      {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum py-2.5 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 disabled:active:scale-100"
+        className="w-full rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum py-3 text-base font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 disabled:active:scale-100"
       >
         {loading ? "Creating account..." : "Register"}
       </button>
 
-      <div className="flex items-center gap-3 my-4">
-        <div className="flex-1 h-px bg-lavender-gray" />
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-lavender-gray" />
         <span className="text-sm text-plum/60">or</span>
-        <div className="flex-1 h-px bg-lavender-gray" />
+        <div className="h-px flex-1 bg-lavender-gray" />
       </div>
 
       <button
         type="button"
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-plum/40 bg-gradient-to-b from-white to-lavender/60 py-2.5 text-sm font-medium text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum/60 hover:to-lavender hover:shadow-md hover:shadow-plum/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-plum/40 bg-gradient-to-b from-white to-lavender/60 py-3 text-base font-medium text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum/60 hover:to-lavender hover:shadow-md hover:shadow-plum/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
       >
-        <FcGoogle className="w-5 h-5" />
+        <FcGoogle className="h-5 w-5" />
         Continue with Google
       </button>
 
-      <p className="text-center text-plum/50 mt-6">
+      <p className="mt-8 text-center text-sm text-plum/70">
         Have an account?{" "}
-        <Link to="/login" className="text-lilac">
+        <Link to="/login" className="font-medium text-lilac">
           Log in
         </Link>
       </p>
