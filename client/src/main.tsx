@@ -11,6 +11,7 @@ import RegistrationPage from "./pages/RegistrationPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ClosetPage from "./pages/ClosetPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegistrationPage /> },
       { path: "/forgot-password", element: <ForgotPasswordPage /> },
+      { path: "/verify-email", element: <VerifyEmailPage /> },
     ],
   },
   { path: "*", element: <NotFoundPage /> },
