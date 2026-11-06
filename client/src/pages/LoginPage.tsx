@@ -100,10 +100,9 @@ export default function LoginPage(): JSX.Element {
 
       <button
         type="submit"
-        disabled={loading}
-        className="bg-plum text-white py-2.5 rounded-lg text-sm font-medium hover:bg-plum/80 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum py-2.5 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
       >
-        {loading ? "Logging in..." : "Login"}
+        Log in
       </button>
 
       <div className="flex items-center gap-3 my-4">
@@ -114,7 +113,7 @@ export default function LoginPage(): JSX.Element {
 
       <button
         type="button"
-        className="flex items-center cursor-pointer justify-center gap-2 border border-lavender-gray bg-white text-plum py-2.5 rounded-lg text-sm font-medium hover:bg-lavender/40"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-plum/40 bg-gradient-to-b from-white to-lavender/60 py-2.5 text-sm font-medium text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum/60 hover:to-lavender hover:shadow-md hover:shadow-plum/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
       >
         <FcGoogle className="w-5 h-5" />
         Continue with Google

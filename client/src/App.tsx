@@ -26,7 +26,7 @@ export default function App(): JSX.Element {
       </header>
 
       <section
-        className="flex flex-1 flex-col items-center justify-center text-center px-6 md:px-20 ml-3 mr-2 mb-3 py-10 rounded-2xl bg-lavender/60 bg-blend-overlay bg-cover bg-center"
+        className="relative flex flex-1 flex-col items-center justify-center text-center px-6 md:px-20 ml-3 mr-2 mb-3 py-10 rounded-2xl border border-plum/15 ring-1 ring-inset ring-white/50 shadow-lg shadow-plum/10 bg-lavender/60 bg-blend-overlay bg-cover bg-center"
         style={{ backgroundImage: `url(${BgImage})` }}
       >
         <CoatHangerIcon
@@ -46,21 +46,18 @@ export default function App(): JSX.Element {
           waiting to be uploaded.
         </p>
         <div className="flex gap-3">
-          <Link to="/register">
-            <button
-              type="button"
-              className="bg-plum cursor-pointer text-white px-6 py-3 rounded-xl text-base font-medium hover:bg-plum/80"
-            >
-              Get Started
-            </button>
+          <Link
+            to="/register"
+            className="inline-flex items-center gap-2 rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum px-7 py-3 text-base font-medium text-white shadow-lg shadow-plum/30 ring-1 ring-inset ring-white/25 transition duration-200 hover:brightness-110 hover:shadow-xl hover:shadow-plum/40 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
+          >
+            Get Started
           </Link>
-          <Link to="/login">
-            <button
-              type="button"
-              className="border-2 cursor-pointer bg-white border-lavender-gray text-ink px-6 py-3 rounded-xl text-base font-medium hover:bg-lavender/50 hover:border-lilac hover:text-plum active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
-            >
-              Login
-            </button>
+
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-2 rounded-full border border-plum/60 bg-gradient-to-b from-white to-lavender/60 px-7 py-3 text-base font-medium text-plum shadow-lg shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum hover:from-white hover:to-lavender hover:shadow-xl hover:shadow-plum/20 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
+          >
+            Login
           </Link>
         </div>
       </section>

@@ -16,7 +16,7 @@ export default function AuthLayout(): JSX.Element {
   return (
     <main className="flex min-h-screen">
       <div
-        className={`flex flex-1 m-4 py-10 rounded-2xl flex-col items-center justify-center ${tint} bg-blend-overlay bg-cover bg-center transition-colors duration-700 ease-in-out`}
+        className={`relative flex flex-1 m-4 py-10 rounded-2xl flex-col items-center justify-center border border-plum/15 ring-1 ring-inset ring-white/50 shadow-lg shadow-plum/10 ${tint} bg-blend-overlay bg-cover bg-center transition-colors duration-700 ease-in-out`}
         style={{ backgroundImage: `url(${BgImage})` }}
       >
         <img

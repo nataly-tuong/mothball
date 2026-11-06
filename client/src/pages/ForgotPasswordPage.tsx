@@ -26,7 +26,7 @@ export default function ForgotPasswordPage(): JSX.Element {
 
         <button
           type="submit"
-          className="bg-plum hover:bg-plum/80 cursor-pointer text-white py-2.5 rounded-lg text-sm font-medium"
+          className="w-full rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum py-2.5 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
         >
           Send reset link
         </button>

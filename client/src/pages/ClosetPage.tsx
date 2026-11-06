@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { useState } from "react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react";
 import BgImage from "../assets/dddepth-267.jpg";
 import Navbar from "../components/Navbar";
 
@@ -39,21 +39,27 @@ export default function ClosetPage({
     </button>
   ));
 
-  const cardElements = sampleListing.map(
-    (sampleListing: SampleListing): JSX.Element => {
-      return (
-        <div className="flex flex-1 flex-col border border-lavender-gray rounded-md max-h-50 max-w-50 overflow-hidden hover:shadow-sm">
-          <img src={sampleListing.imagePath} className="h-[50%]" />
-          <div className="p-3">
-            <h3 className="font-bold mb-4">{sampleListing.name}</h3>
-            <select className="border rounded-lg px-2 bg-lavender hover:opacity-50 cursor-pointer">
-              <option value="to upload">To upload</option>
-            </select>
-          </div>
-        </div>
-      );
-    },
-  );
+  const cardElements = sampleListing.map((listing) => (
+    <li
+      key={listing.name}
+      className="overflow-hidden rounded-xl border border-lavender-gray bg-white shadow-sm shadow-plum/5 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-plum/15"
+    >
+      <img
+        src={listing.imagePath}
+        alt={listing.name}
+        className="aspect-[4/3] w-full object-cover"
+      />
+      <div className="p-4">
+        <h3 className="mb-3 font-bold text-plum">{listing.name}</h3>
+        <select
+          aria-label={`Status for ${listing.name}`}
+          className="cursor-pointer rounded-full border border-lilac/40 bg-lavender/60 px-3 py-1 text-sm text-plum transition hover:bg-lavender focus-visible:outline-2 focus-visible:outline-lilac"
+        >
+          <option value="to upload">To upload</option>
+        </select>
+      </div>
+    </li>
+  ));
 
   return (
     <main
@@ -62,13 +68,14 @@ export default function ClosetPage({
     >
       <Navbar />
 
-      <section className="flex flex-1 gap-4 flex-col px-10 md:px-20 ml-3 mr-2 mb-3 py-10 rounded-2xl bg-white">
+      <section className="relative flex flex-1 gap-4 flex-col px-10 md:px-20 ml-3 mr-2 mb-3 py-10 rounded-2xl border border-plum/15 ring-1 ring-white/40 shadow-lg shadow-plum/20 bg-white">
         <div className="flex justify-between">
           <h2 className="text-plum text-4xl font-bold">Our Closet</h2>
           <button
             type="button"
-            className="bg-plum cursor-pointer relative right-1 before:content-['+'] before:mr-2 text-white px-5 rounded-md py-2 hover:bg-plum/80"
+            className="inline-flex items-center gap-2 rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum px-5 py-2 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
           >
+            <PlusIcon size={16} weight="bold" aria-hidden="true" />
             New item
           </button>
         </div>
@@ -90,7 +97,9 @@ export default function ClosetPage({
           <div className="flex gap-2">{filterElements}</div>
         </div>
 
-        {cardElements}
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
+          {cardElements}
+        </ul>
       </section>
     </main>
   );
