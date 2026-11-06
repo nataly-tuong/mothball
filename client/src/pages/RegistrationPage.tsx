@@ -121,7 +121,7 @@ export default function RegistrationPage(): JSX.Element {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum py-3 text-base font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 disabled:active:scale-100"
+        className="w-full rounded-full border border-plum bg-linear-to-b from-plum/80 to-plum py-3 text-base font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 disabled:active:scale-100"
       >
         {loading ? "Creating account..." : "Register"}
       </button>
@@ -134,7 +134,7 @@ export default function RegistrationPage(): JSX.Element {
 
       <button
         type="button"
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-plum/40 bg-gradient-to-b from-white to-lavender/60 py-3 text-base font-medium text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum/60 hover:to-lavender hover:shadow-md hover:shadow-plum/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-plum/40 bg-linear-to-b from-white to-lavender/60 py-3 text-base font-medium text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum/60 hover:to-lavender hover:shadow-md hover:shadow-plum/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
       >
         <FcGoogle className="h-5 w-5" />
         Continue with Google

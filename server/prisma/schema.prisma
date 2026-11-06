@@ -13,12 +13,14 @@ datasource db {
 }
 
 model User {
-  id                Int      @id @default(autoincrement())
-  name              String
-  email             String   @unique
-  emailVerified     Boolean  @default(false)
-  passwordHash      String
-  resetToken        String?
-  resetTokenExpiry  DateTime?
-  createdAt         DateTime @default(now())
+  id                        Int      @id @default(autoincrement())
+  name                      String
+  email                     String   @unique
+  emailVerified             Boolean  @default(false)
+  verificationToken         String?
+  verificationTokenExpiry   DateTime?
+  passwordHash              String
+  resetToken                String?
+  resetTokenExpiry          DateTime?
+  createdAt                 DateTime @default(now())
 }

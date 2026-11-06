@@ -6,6 +6,7 @@ import prisma from "../prismaClient.js";
 import { sendMail } from "../lib/mailer.js";
 import { welcomeEmailHtml } from "../emails/welcome.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import crypto from "crypto";
 
 const router = express.Router();
 
@@ -44,29 +45,36 @@ router.post("/register", async (req: Request, res: Response) => {
   try {
     const hashedPassword = bcrypt.hashSync(String(password), 8);
 
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     const user = await prisma.user.create({
       data: {
         name: String(name).trim(),
         email: cleanEmail,
         passwordHash: hashedPassword,
+        verificationToken: hashedToken,
+        verificationTokenExpiry: tokenExpiry,
       },
     });
 
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
+
     try {
-      await sendMail(user.email, "Welcome to Mothball!", welcomeEmailHtml);
-    } catch {
-      console.error("Welcome email failed to send");
+      await sendMail(
+        user.email,
+        "Verify your Mothball email",
+        welcomeEmailHtml(verificationUrl),
+      );
+    } catch (error) {
+      console.error("Verification email failed to send:", error);
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
-      expiresIn: "24h",
-    });
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
     res.sendStatus(204);
   } catch (err) {
     if (
@@ -82,6 +90,7 @@ router.post("/register", async (req: Request, res: Response) => {
     if (err instanceof Error) {
       console.log(err.message);
     }
+
     res.sendStatus(503);
   }
 });
@@ -115,6 +124,14 @@ router.post("/login", async (req: Request, res: Response) => {
       return;
     }
 
+    if (!user.emailVerified) {
+      res.status(403).send({
+        message: "Please verify your email before logging in.",
+        code: "EMAIL_NOT_VERIFIED",
+      });
+      return;
+    }
+
     const shouldRemember = remember === true;
 
     const expiresIn = shouldRemember ? "30d" : "24h";
@@ -137,6 +154,107 @@ router.post("/login", async (req: Request, res: Response) => {
       console.log(err.message);
     }
     res.sendStatus(503);
+  }
+});
+
+router.post("/verify-email", async (req: Request, res: Response) => {
+  const { token } = req.body;
+
+  if (typeof token !== "string" || !token) {
+    res.status(400).send({ message: "Verification token is required" });
+    return;
+  }
+
+  try {
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await prisma.user.findFirst({
+      where: {
+        verificationToken: hashedToken,
+        verificationTokenExpiry: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      res.status(400).send({
+        message: "Invalid or expired verification link",
+      });
+      return;
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationToken: null,
+        verificationTokenExpiry: null,
+      },
+    });
+
+    res.status(200).send({
+      message: "Email verified successfully!",
+    });
+  } catch (err) {
+    console.error("Email verification failed:", err);
+    res.sendStatus(500);
+  }
+});
+
+router.post("/resend-verification", async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email || typeof email !== "string") {
+    res.status(400).send({ message: "Email is required" });
+    return;
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: cleanEmail },
+    });
+
+    if (!user || user.emailVerified) {
+      res.status(200).send({
+        message: "If your account needs verification, an email will be sent.",
+      });
+      return;
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationToken: hashedToken,
+        verificationTokenExpiry: tokenExpiry,
+      },
+    });
+
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
+
+    await sendMail(
+      user.email,
+      "Verify your Mothball email",
+      welcomeEmailHtml(verificationUrl),
+    );
+
+    res.status(200).send({
+      message: "If your account needs verification, an email will be sent.",
+    });
+  } catch (error) {
+    console.error("Resending verification email failed:", error);
+    res.status(500).send({ message: "Unable to process your request." });
   }
 });
 

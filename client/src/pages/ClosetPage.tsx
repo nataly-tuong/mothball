@@ -47,7 +47,7 @@ export default function ClosetPage({
       <img
         src={listing.imagePath}
         alt={listing.name}
-        className="aspect-[4/3] w-full object-cover"
+        className="aspect-4/3 w-full object-cover"
       />
       <div className="p-4">
         <h3 className="mb-3 font-bold text-plum">{listing.name}</h3>
@@ -73,7 +73,7 @@ export default function ClosetPage({
           <h2 className="text-plum text-4xl font-bold">Our Closet</h2>
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum px-5 py-2 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
+            className="inline-flex items-center gap-2 rounded-full border border-plum bg-linear-to-b from-plum/80 to-plum px-5 py-2 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
           >
             <PlusIcon size={16} weight="bold" aria-hidden="true" />
             New item
