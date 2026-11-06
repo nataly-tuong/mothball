@@ -3,6 +3,7 @@ import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import PasswordInput from "../components/PasswordInput";
 
 export default function LoginPage(): JSX.Element {
   const navigate = useNavigate();
@@ -70,12 +71,12 @@ export default function LoginPage(): JSX.Element {
       <label htmlFor="password" className="text-plum font-bold mb-1">
         Password
       </label>
-      <input
+      <PasswordInput
         id="password"
         name="password"
-        type="password"
         placeholder="your password"
-        className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-3"
+        autoComplete="current-password"
+        className="mb-3"
       />
 
       <div className="flex items-center justify-between mb-10">

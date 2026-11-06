@@ -3,6 +3,7 @@ import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import PasswordInput from "../components/PasswordInput";
 
 export default function RegistrationPage(): JSX.Element {
   const navigate = useNavigate();
@@ -84,23 +85,25 @@ export default function RegistrationPage(): JSX.Element {
       <label htmlFor="password" className="text-plum font-bold mb-1">
         Password
       </label>
-      <input
+      <PasswordInput
         id="password"
         name="password"
-        type="password"
         placeholder="your password"
-        className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-3"
+        autoComplete="new-password"
+        required
+        className="mb-3"
       />
 
       <label htmlFor="confirmPassword" className="text-plum font-bold mb-1">
         Confirm Password
       </label>
-      <input
+      <PasswordInput
         id="confirmPassword"
         name="confirmPassword"
-        type="password"
         placeholder="your password"
-        className="py-2.5 px-4 border border-lavender-gray rounded-lg mb-5"
+        autoComplete="new-password"
+        required
+        className="mb-5"
       />
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
