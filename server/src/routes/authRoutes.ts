@@ -18,6 +18,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
         id: true,
         email: true,
         name: true,
+        emailVerified: true,
       },
     });
 
@@ -25,7 +26,12 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
       return res.sendStatus(404);
     }
 
-    return res.json({ user });
+    res.status(200).send({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      emailVerified: user.emailVerified,
+    });
   } catch (error) {
     console.error("Failed to fetch user:", error);
     return res.sendStatus(500);

@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState, type JSX } from "react";
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 type VerificationStatus = "verifying" | "success" | "error" | "pending";
 
 export default function VerifyEmail(): JSX.Element {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
   const location = useLocation();
 
   const [searchParams] = useSearchParams();
@@ -23,6 +28,14 @@ export default function VerifyEmail(): JSX.Element {
   const [resendMessage, setResendMessage] = useState("");
 
   const requestStartedForToken = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (user?.emailVerified) {
+      navigate("/closet", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!token) {
