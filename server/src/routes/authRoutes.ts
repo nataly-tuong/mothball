@@ -7,8 +7,45 @@ import { sendMail } from "../lib/mailer.js";
 import { welcomeEmailHtml } from "../emails/welcome.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import crypto from "crypto";
+import rateLimit from "express-rate-limit";
 
 const router = express.Router();
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  message: { message: "Too many login attempts. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const resendLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 3,
+  message: { message: "Too many requests. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  message: {
+    message: "Too many registration attempts. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const verifyEmailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  message: {
+    message: "Too many verification attempts. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 router.get("/me", authMiddleware, async (req: Request, res: Response) => {
   try {
@@ -38,70 +75,76 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
-router.post("/register", async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
+router.post(
+  "/register",
+  registerLimiter,
+  async (req: Request, res: Response) => {
+    const { name, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    res.status(400).send({ message: "Name, email, and password are required" });
-    return;
-  }
-
-  const cleanEmail = String(email).trim().toLowerCase();
-
-  try {
-    const hashedPassword = bcrypt.hashSync(String(password), 8);
-
-    const rawToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-
-    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    const user = await prisma.user.create({
-      data: {
-        name: String(name).trim(),
-        email: cleanEmail,
-        passwordHash: hashedPassword,
-        verificationToken: hashedToken,
-        verificationTokenExpiry: tokenExpiry,
-      },
-    });
-
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
-
-    try {
-      await sendMail(
-        user.email,
-        "Verify your Mothball email",
-        welcomeEmailHtml(verificationUrl),
-      );
-    } catch (error) {
-      console.error("Verification email failed to send:", error);
-    }
-
-    res.sendStatus(204);
-  } catch (err) {
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "code" in err &&
-      err.code === "P2002"
-    ) {
-      res.status(409).send({ message: "Email already in use" });
+    if (!name || !email || !password) {
+      res
+        .status(400)
+        .send({ message: "Name, email, and password are required" });
       return;
     }
 
-    if (err instanceof Error) {
-      console.log(err.message);
+    const cleanEmail = String(email).trim().toLowerCase();
+
+    try {
+      const hashedPassword = bcrypt.hashSync(String(password), 8);
+
+      const rawToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
+
+      const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      const user = await prisma.user.create({
+        data: {
+          name: String(name).trim(),
+          email: cleanEmail,
+          passwordHash: hashedPassword,
+          verificationToken: hashedToken,
+          verificationTokenExpiry: tokenExpiry,
+        },
+      });
+
+      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
+
+      try {
+        await sendMail(
+          user.email,
+          "Verify your Mothball email",
+          welcomeEmailHtml(verificationUrl),
+        );
+      } catch (error) {
+        console.error("Verification email failed to send:", error);
+      }
+
+      res.sendStatus(204);
+    } catch (err) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "code" in err &&
+        err.code === "P2002"
+      ) {
+        res.status(409).send({ message: "Email already in use" });
+        return;
+      }
+
+      if (err instanceof Error) {
+        console.log(err.message);
+      }
+
+      res.sendStatus(503);
     }
+  },
+);
 
-    res.sendStatus(503);
-  }
-});
-
-router.post("/login", async (req: Request, res: Response) => {
+router.post("/login", loginLimiter, async (req: Request, res: Response) => {
   const { email, password, remember } = req.body;
 
   if (!email || !password) {
@@ -163,106 +206,117 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/verify-email", async (req: Request, res: Response) => {
-  const { token } = req.body;
+router.post(
+  "/verify-email",
+  verifyEmailLimiter,
+  async (req: Request, res: Response) => {
+    const { token } = req.body;
 
-  if (typeof token !== "string" || !token) {
-    res.status(400).send({ message: "Verification token is required" });
-    return;
-  }
-
-  try {
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-    const user = await prisma.user.findFirst({
-      where: {
-        verificationToken: hashedToken,
-        verificationTokenExpiry: {
-          gt: new Date(),
-        },
-      },
-    });
-
-    if (!user) {
-      res.status(400).send({
-        message: "Invalid or expired verification link",
-      });
+    if (typeof token !== "string" || !token) {
+      res.status(400).send({ message: "Verification token is required" });
       return;
     }
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: true,
-        verificationToken: null,
-        verificationTokenExpiry: null,
-      },
-    });
+    try {
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
 
-    res.status(200).send({
-      message: "Email verified successfully!",
-    });
-  } catch (err) {
-    console.error("Email verification failed:", err);
-    res.sendStatus(500);
-  }
-});
+      const user = await prisma.user.findFirst({
+        where: {
+          verificationToken: hashedToken,
+          verificationTokenExpiry: {
+            gt: new Date(),
+          },
+        },
+      });
 
-router.post("/resend-verification", async (req: Request, res: Response) => {
-  const { email } = req.body;
+      if (!user) {
+        res.status(400).send({
+          message: "Invalid or expired verification link",
+        });
+        return;
+      }
 
-  if (!email || typeof email !== "string") {
-    res.status(400).send({ message: "Email is required" });
-    return;
-  }
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: true,
+          verificationToken: null,
+          verificationTokenExpiry: null,
+        },
+      });
 
-  const cleanEmail = email.trim().toLowerCase();
+      res.status(200).send({
+        message: "Email verified successfully!",
+      });
+    } catch (err) {
+      console.error("Email verification failed:", err);
+      res.sendStatus(500);
+    }
+  },
+);
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email: cleanEmail },
-    });
+router.post(
+  "/resend-verification",
+  resendLimiter,
+  async (req: Request, res: Response) => {
+    const { email } = req.body;
 
-    if (!user || user.emailVerified) {
+    if (!email || typeof email !== "string") {
+      res.status(400).send({ message: "Email is required" });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email: cleanEmail },
+      });
+
+      if (!user || user.emailVerified) {
+        res.status(200).send({
+          message: "If your account needs verification, an email will be sent.",
+        });
+        return;
+      }
+
+      const rawToken = crypto.randomBytes(32).toString("hex");
+
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
+
+      const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          verificationToken: hashedToken,
+          verificationTokenExpiry: tokenExpiry,
+        },
+      });
+
+      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
+
+      await sendMail(
+        user.email,
+        "Verify your Mothball email",
+        welcomeEmailHtml(verificationUrl),
+      );
+
       res.status(200).send({
         message: "If your account needs verification, an email will be sent.",
       });
-      return;
+    } catch (error) {
+      console.error("Resending verification email failed:", error);
+      res.status(500).send({ message: "Unable to process your request." });
     }
-
-    const rawToken = crypto.randomBytes(32).toString("hex");
-
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-
-    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        verificationToken: hashedToken,
-        verificationTokenExpiry: tokenExpiry,
-      },
-    });
-
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
-
-    await sendMail(
-      user.email,
-      "Verify your Mothball email",
-      welcomeEmailHtml(verificationUrl),
-    );
-
-    res.status(200).send({
-      message: "If your account needs verification, an email will be sent.",
-    });
-  } catch (error) {
-    console.error("Resending verification email failed:", error);
-    res.status(500).send({ message: "Unable to process your request." });
-  }
-});
+  },
+);
 
 router.post("/logout", async (req: Request, res: Response) => {
   res.clearCookie("token", {
