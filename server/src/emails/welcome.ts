@@ -1,7 +1,7 @@
 export const welcomeEmailHtml = (
-  verificationUrl: string,
+  code: string,
 ) => `<body style="margin:0;padding:0;background-color:#f0e9fa;">
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">One little step before entering Mothball. Verify your email to get started!</div>
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Your Mothball verification code is ${code}.</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f0e9fa;background-image:linear-gradient(180deg,#dcdcf8 0%,#efe3f6 55%,#f8eaf4 100%);font-family:'Hanken Grotesk',Arial,sans-serif;color:#29233a;">
     <tr>
       <td align="center" style="padding:40px 16px;">
@@ -19,9 +19,15 @@ export const welcomeEmailHtml = (
                   <td align="center" style="padding:28px 24px 30px;">
                     <img src="https://res.cloudinary.com/ooazewai/image/upload/f_png,q_auto,w_192/Mothball" alt="A lilac moth perched on a mothball" width="96" style="display:block;width:96px;max-width:96px;height:auto;border:0;margin:0 auto 14px;" />
                     <h1 style="margin:0 0 12px;font-family:'Fredoka',Arial,sans-serif;font-size:34px;line-height:1.2;font-weight:500;color:#39245f;">One more little thing!</h1>
-                    <p style="margin:0 0 24px;font-size:16px;line-height:1.7;color:#29233a;">Welcome to Mothball! Before you settle in, we just need to make sure your email address belongs to you.</p>
-                    <a href="${verificationUrl}" style="display:inline-block;padding:13px 32px;background-color:#39245f;background-image:linear-gradient(180deg,#53407a 0%,#39245f 100%);border:1px solid #39245f;border-radius:999px;box-shadow:0 6px 14px rgba(57,36,95,0.22),inset 0 0 0 1px rgba(255,255,255,0.22);font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">Verify my email</a>
-                    <p style="margin:20px 0 0;font-size:12px;line-height:1.6;color:#625777;">This link expires in 24 hours.</p>
+                    <p style="margin:0 0 20px;font-size:16px;line-height:1.7;color:#29233a;">Welcome to Mothball! Enter this code to confirm your email address.</p>
+
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;border-collapse:separate;background-color:#fffefc;border:1px solid #d9d0e5;border-radius:16px;">
+                      <tr>
+                        <td align="center" style="padding:16px 28px 16px 38px;font-family:'Courier New',Courier,monospace;font-size:36px;line-height:1;font-weight:700;letter-spacing:10px;color:#39245f;">${code}</td>
+                      </tr>
+                    </table>
+
+                    <p style="margin:20px 0 0;font-size:12px;line-height:1.6;color:#625777;">This code expires in 15 minutes.</p>
                   </td>
                 </tr>
               </table>

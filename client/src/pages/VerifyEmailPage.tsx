@@ -1,227 +1,212 @@
-import { useEffect, useRef, useState, type JSX } from "react";
+import { useEffect, useState, type JSX } from "react";
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
-type VerificationStatus = "verifying" | "success" | "error" | "pending";
+const CODE_LENGTH = 6;
+const RESEND_COOLDOWN = 30;
 
 export default function VerifyEmail(): JSX.Element {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const navigate = useNavigate();
-
   const location = useLocation();
 
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const knownEmail =
+    typeof location.state?.email === "string" ? location.state.email : "";
 
-  const [status, setStatus] = useState<VerificationStatus>(
-    token ? "verifying" : "pending",
-  );
-
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const [email, setEmail] = useState(() =>
-    typeof location.state?.email === "string" ? location.state.email : "",
-  );
-  const [resending, setResending] = useState(false);
-  const [resendMessage, setResendMessage] = useState("");
-
-  const requestStartedForToken = useRef<string | null>(null);
+  const [email, setEmail] = useState(knownEmail);
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    if (loading) return;
-
-    if (user?.emailVerified) {
+    if (!loading && user?.emailVerified) {
       navigate("/closet", { replace: true });
     }
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (!token) {
-      setStatus("pending");
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  async function verify(value: string) {
+    if (submitting) return;
+
+    if (!email.trim()) {
+      setError("Enter your email address.");
       return;
     }
 
-    if (requestStartedForToken.current === token) return;
-
-    requestStartedForToken.current = token;
-
-    const verifyEmail = async () => {
-      try {
-        const response = await fetch("/api/auth/verify-email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token }),
-        });
-
-        const data: { message?: string } = await response
-          .json()
-          .catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(
-            data.message || "Verification failed. Please try again.",
-          );
-        }
-
-        setStatus("success");
-      } catch (error) {
-        setStatus("error");
-
-        setErrorMessage(
-          error instanceof Error ? error.message : "Something went wrong.",
-        );
-      }
-    };
-
-    verifyEmail();
-  }, [token]);
-
-  // Request another verification email
-  const handleResend = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    setResending(true);
-    setResendMessage("");
+    setError("");
+    setInfo("");
+    setSubmitting(true);
 
     try {
-      const response = await fetch("/api/auth/resend-verification", {
+      const res = await fetch("/api/auth/verify-email", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, code: value }),
       });
+      const data = await res.json().catch(() => null);
 
-      const data: { message?: string } = await response
-        .json()
-        .catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.message || "Unable to send verification email.");
+      if (!res.ok) {
+        setError(data?.message ?? "Verification failed. Please try again.");
+        setCode("");
+        return;
       }
 
-      setResendMessage(
-        data.message ||
-          "If your account needs verification, an email will be sent.",
-      );
-    } catch (error) {
-      setResendMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong. Please try again.",
-      );
+      // The server set the login cookie, so load the user and continue
+      await refreshUser();
+      navigate("/closet", { replace: true });
+    } catch {
+      setError("Can't reach the server. Please try again.");
     } finally {
-      setResending(false);
+      setSubmitting(false);
     }
-  };
+  }
+
+  async function handleResend() {
+    if (cooldown > 0 || !email.trim()) {
+      if (!email.trim()) setError("Enter your email address.");
+      return;
+    }
+
+    setError("");
+    setInfo("");
+
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setError(data?.message ?? "Unable to send a new code.");
+        return;
+      }
+
+      setInfo(data?.message ?? "A new code is on its way.");
+      setCooldown(RESEND_COOLDOWN);
+    } catch {
+      setError("Can't reach the server. Please try again.");
+    }
+  }
+
+  function handleCodeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, CODE_LENGTH);
+    setCode(digits);
+    setError("");
+
+    if (digits.length === CODE_LENGTH) {
+      verify(digits);
+    }
+  }
 
   return (
-    <div className="flex items-center flex-col w-full max-w-md p-8 rounded-2xl">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (code.length === CODE_LENGTH) verify(code);
+      }}
+      className="auth-form items-center"
+    >
       <EnvelopeSimpleIcon
         className="text-lilac"
-        size={150}
+        size={110}
         aria-hidden="true"
       />
 
-      {status === "verifying" && (
-        <>
-          <h2 className="text-3xl font-fredoka w-full font-medium text-center text-plum mb-2">
-            Verifying your email...
-          </h2>
+      <div className="flex flex-col gap-1 text-center">
+        <h2 className="auth-heading">Check your email</h2>
+        <p className="text-sm text-plum/70">
+          {knownEmail
+            ? `We sent a 6-digit code to ${knownEmail}.`
+            : "Enter your email and the 6-digit code we sent you."}
+        </p>
+      </div>
 
-          <p className="text-plum/70 mb-6 text-center">
-            Just a moment while we make sure everything is in order.
-          </p>
-        </>
-      )}
-
-      {status === "success" && (
-        <>
-          <h2 className="text-3xl font-fredoka w-full font-medium text-center text-plum mb-2">
-            You're verified!
-          </h2>
-
-          <p className="text-plum/70 mb-6 text-center">
-            Your email is confirmed. Welcome to Mothball!
-          </p>
-
-          <Link
-            to="/login"
-            className="w-full text-center rounded-full border border-plum bg-linear-to-b from-plum/80 to-plum py-2.5 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 hover:brightness-110 hover:shadow-lg hover:shadow-plum/25"
-          >
-            Back to log in
-          </Link>
-        </>
-      )}
-
-      {status === "error" && (
-        <>
-          <h2 className="text-3xl font-fredoka w-full font-medium text-center text-plum mb-2">
-            Verification unsuccessful
-          </h2>
-
-          <p className="text-plum/70 mb-6 text-center">{errorMessage}</p>
-
-          <p className="text-plum/70 text-sm text-center mb-4">
-            You can request a new verification email below.
-          </p>
-        </>
-      )}
-
-      {status === "pending" && (
-        <>
-          <h2 className="text-3xl font-fredoka w-full font-medium text-center text-plum mb-2">
-            Check your email
-          </h2>
-
-          <p className="text-plum/70 mb-6 text-center">
-            We've sent you a verification link to your email address. Verify
-            your email before accessing your closet!
-          </p>
-        </>
-      )}
-
-      {(status === "pending" || status === "error") && (
-        <form onSubmit={handleResend} className="w-full flex flex-col gap-3">
+      {!knownEmail && (
+        <div className="field w-full">
+          <label htmlFor="email" className="field-label">
+            Email
+          </label>
           <input
+            id="email"
+            name="email"
             type="email"
+            placeholder="jane.doe@example.com"
+            autoComplete="email"
             required
             value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setResendMessage("");
-            }}
-            placeholder="Your email address"
-            aria-label="Your email address"
-            className="w-full rounded-full border border-plum/20 bg-white px-4 py-3 text-sm text-plum outline-none placeholder:text-plum/40 focus:border-lilac"
+            onChange={(e) => setEmail(e.target.value)}
+            className="input"
           />
-
-          <button
-            type="submit"
-            disabled={resending}
-            className="w-full rounded-full border border-plum bg-linear-to-b from-plum/80 to-plum py-2.5 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {resending ? "Sending..." : "Resend verification email"}
-          </button>
-
-          {resendMessage && (
-            <p role="status" className="text-center text-sm text-plum/70">
-              {resendMessage}
-            </p>
-          )}
-        </form>
+        </div>
       )}
 
-      <p className="mt-8 text-center text-sm text-plum/70">
+      <div className="field w-full">
+        <label htmlFor="code" className="field-label">
+          Verification code
+        </label>
+        <input
+          id="code"
+          name="code"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          placeholder="------"
+          maxLength={CODE_LENGTH}
+          autoFocus
+          value={code}
+          onChange={handleCodeChange}
+          aria-invalid={error !== ""}
+          disabled={submitting}
+          className="input text-center text-2xl font-semibold tracking-[0.5em]"
+        />
+      </div>
+
+      {error && (
+        <p role="alert" className="error-box w-full text-center">
+          {error}
+        </p>
+      )}
+
+      {info && !error && (
+        <p role="status" className="footer-text w-full">
+          {info}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={submitting || code.length !== CODE_LENGTH}
+        className="btn-primary mt-1"
+      >
+        {submitting ? "Verifying..." : "Verify email"}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleResend}
+        disabled={cooldown > 0}
+        className="link cursor-pointer text-sm disabled:cursor-not-allowed disabled:text-plum/40 disabled:no-underline"
+      >
+        {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+      </button>
+
+      <p className="footer-text">
         Check your spam folder.{" "}
-        <Link to="/login" className="font-medium text-lilac hover:underline">
+        <Link to="/login" className="link">
           Back to log in
         </Link>
       </p>
-    </div>
+    </form>
   );
 }

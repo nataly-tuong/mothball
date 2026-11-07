@@ -17,10 +17,13 @@ model User {
   name                      String
   email                     String   @unique
   emailVerified             Boolean  @default(false)
+
   verificationToken         String?
   verificationTokenExpiry   DateTime?
   passwordHash              String
   resetToken                String?
   resetTokenExpiry          DateTime?
+
   createdAt                 DateTime @default(now())
+  tokenVersion Int @default(0)
 }

@@ -16,3 +16,64 @@
 body {
   font-family: "Hanken Grotesk", sans-serif;
 }
+
+@layer components {
+  .auth-form {
+    @apply flex w-full max-w-md flex-col gap-3.5;
+  }
+  .auth-heading {
+    @apply mb-1 font-fredoka text-2xl font-medium leading-tight tracking-tight text-plum sm:text-3xl;
+  }
+  .field {
+    @apply flex flex-col gap-1.5;
+  }
+  .field-label {
+    @apply text-sm font-semibold text-plum;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-lavender-gray px-4 py-2.5 text-base text-plum transition placeholder:text-plum/40;
+    @apply focus:border-lilac focus:outline-none focus:ring-2 focus:ring-lilac/40;
+    @apply aria-invalid:border-coral aria-invalid:focus:border-coral aria-invalid:focus:ring-coral/30;
+  }
+
+  .input-wrapper {
+    @apply flex w-full items-center rounded-lg border border-lavender-gray transition;
+    @apply focus-within:border-lilac focus-within:ring-2 focus-within:ring-lilac/40;
+    @apply has-aria-invalid:border-coral has-aria-invalid:focus-within:ring-coral/30;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    @apply w-full cursor-pointer rounded-full px-6 py-2.5 text-base font-medium transition duration-200;
+    @apply active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac;
+  }
+  .btn-primary {
+    @apply border border-plum bg-linear-to-b from-plum/80 to-plum text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25;
+    @apply hover:brightness-110 hover:shadow-lg hover:shadow-plum/25;
+    @apply disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 disabled:active:scale-100;
+  }
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2.5 border border-plum/40 bg-linear-to-b from-white to-lavender/60 text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white;
+    @apply hover:border-plum/60 hover:to-lavender hover:shadow-md hover:shadow-plum/15;
+  }
+
+  .error-box {
+    @apply text-sm leading-snug text-coral;
+  }
+  .divider {
+    @apply flex items-center gap-3;
+  }
+  .divider-line {
+    @apply h-px flex-1 bg-lavender-gray;
+  }
+  .divider-text {
+    @apply text-xs text-plum/60;
+  }
+  .footer-text {
+    @apply text-center text-sm text-plum/70;
+  }
+  .link {
+    @apply font-medium text-lilac hover:underline;
+  }
+}

@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch("/api/auth/me", {
         credentials: "include",
+        cache: "no-store",
       });
 
       if (!res.ok) {
@@ -37,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await res.json();
-      setUser(data.user);
+      setUser(data);
     } catch (error) {
       console.error("Could not check authentication:", error);
       setUser(null);

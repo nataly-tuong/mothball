@@ -5,13 +5,16 @@ import { AuthProvider } from "./context/AuthContext";
 
 import "./index.css";
 import App from "./App";
+
 import AuthLayout from "./pages/AuthLayout";
 import LoginPage from "./pages/LoginPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
-import ClosetPage from "./pages/ClosetPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+
+import ClosetPage from "./pages/ClosetPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -35,6 +38,7 @@ const router = createBrowserRouter([
       { path: "/register", element: <RegistrationPage /> },
       { path: "/forgot-password", element: <ForgotPasswordPage /> },
       { path: "/verify-email", element: <VerifyEmailPage /> },
+      { path: "/reset-password", element: <ResetPasswordPage /> },
     ],
   },
   { path: "*", element: <NotFoundPage /> },
