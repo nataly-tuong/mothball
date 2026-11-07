@@ -1,10 +1,15 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import bcrypt from "bcryptjs";
 import prisma from "../../prismaClient.js";
 import authMiddleware from "../../middleware/authMiddleware.js";
 import { loginLimiter } from "../../middleware/rateLimiters.js";
 import { issueAuthCookie } from "../../lib/authCookie.js";
+
+import {
+  verifyPassword,
+  hashPassword,
+  needsRehash,
+} from "../../lib/passwordHash.js";
 
 const router = Router();
 
@@ -29,28 +34,26 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
 router.post("/login", loginLimiter, async (req: Request, res: Response) => {
   const { email, password, remember } = req.body;
 
-  if (!email || !password) {
+  if (
+    typeof email !== "string" ||
+    typeof password !== "string" ||
+    !email.trim() ||
+    !password
+  ) {
     res.status(400).send({ message: "Email and password are required" });
     return;
   }
 
-  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanEmail = email.trim().toLowerCase();
 
   try {
     const user = await prisma.user.findUnique({
       where: { email: cleanEmail },
     });
 
-    if (!user) {
-      res.status(401).send({ message: "Invalid credentials" });
-      return;
-    }
+    const passwordIsValid = await verifyPassword(password, user?.passwordHash);
 
-    const passwordIsValid = await bcrypt.compare(
-      String(password),
-      user.passwordHash,
-    );
-    if (!passwordIsValid) {
+    if (!user || !passwordIsValid) {
       res.status(401).send({ message: "Invalid credentials" });
       return;
     }
@@ -61,6 +64,13 @@ router.post("/login", loginLimiter, async (req: Request, res: Response) => {
         code: "EMAIL_NOT_VERIFIED",
       });
       return;
+    }
+
+    if (needsRehash(user.passwordHash)) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: await hashPassword(password) },
+      });
     }
 
     issueAuthCookie(res, user, remember === true);

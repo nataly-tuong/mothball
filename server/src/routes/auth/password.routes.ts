@@ -12,6 +12,8 @@ import {
 import { getPasswordError } from "../../lib/passwordRules.js";
 import { createResetToken, hashToken } from "../../lib/tokens.js";
 
+import { hashPassword } from "../../lib/passwordHash.js";
+
 import {
   isPasswordBreached,
   BREACHED_PASSWORD_MESSAGE,
@@ -92,7 +94,7 @@ router.post(
     }
 
     try {
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await hashPassword(password);
 
       const result = await prisma.user.updateMany({
         where: {

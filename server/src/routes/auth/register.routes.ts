@@ -1,11 +1,12 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import bcrypt from "bcryptjs";
 import prisma from "../../prismaClient.js";
 import { sendMail } from "../../lib/mailer.js";
 import { welcomeEmailHtml } from "../../emails/welcome.js";
 import { registerLimiter } from "../../middleware/rateLimiters.js";
 import { getPasswordError } from "../../lib/passwordRules.js";
+import { getNameError, getEmailError } from "../../lib/validation.js";
+import { hashPassword } from "../../lib/passwordHash.js";
 import { createVerificationCode } from "../../lib/tokens.js";
 
 import {
@@ -21,41 +22,67 @@ router.post(
   async (req: Request, res: Response) => {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      res
+    if (
+      typeof name !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !name.trim() ||
+      !email.trim() ||
+      !password
+    ) {
+      return res
         .status(400)
         .send({ message: "Name, email, and password are required" });
-      return;
     }
 
-    if (typeof password !== "string") {
-      return res.status(400).send({ message: "A valid password is required." });
-    }
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
-    const passwordError = getPasswordError(password);
-    if (passwordError) {
-      return res.status(400).send({ message: passwordError });
+    const fieldError =
+      getNameError(cleanName) ??
+      getEmailError(cleanEmail) ??
+      getPasswordError(password);
+
+    if (fieldError) {
+      return res.status(400).send({ message: fieldError });
     }
 
     if (await isPasswordBreached(password)) {
       return res.status(400).send({ message: BREACHED_PASSWORD_MESSAGE });
     }
 
-    const cleanEmail = String(email).trim().toLowerCase();
-
     try {
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const existing = await prisma.user.findUnique({
+        where: { email: cleanEmail },
+        select: { id: true, emailVerified: true },
+      });
+
+      if (existing?.emailVerified) {
+        return res.status(409).send({ message: "Email already in use" });
+      }
+
+      const passwordHash = await hashPassword(password);
       const { code, hashed, expiry } = createVerificationCode(cleanEmail);
 
-      const user = await prisma.user.create({
-        data: {
-          name: String(name).trim(),
-          email: cleanEmail,
-          passwordHash: hashedPassword,
-          verificationToken: hashed,
-          verificationTokenExpiry: expiry,
-        },
-      });
+      const verificationData = {
+        name: cleanName,
+        passwordHash,
+        verificationToken: hashed,
+        verificationTokenExpiry: expiry,
+      };
+
+      const user = existing
+        ? await prisma.user.update({
+            where: { id: existing.id },
+            data: {
+              ...verificationData,
+              resetToken: null,
+              resetTokenExpiry: null,
+            },
+          })
+        : await prisma.user.create({
+            data: { email: cleanEmail, ...verificationData },
+          });
 
       try {
         await sendMail(
@@ -75,8 +102,7 @@ router.post(
         "code" in err &&
         err.code === "P2002"
       ) {
-        res.status(409).send({ message: "Email already in use" });
-        return;
+        return res.status(409).send({ message: "Email already in use" });
       }
 
       if (err instanceof Error) {

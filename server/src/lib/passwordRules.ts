@@ -2,8 +2,8 @@ export function getPasswordError(password: string): string | null {
   if (password.length < 12) {
     return "Password must be at least 12 characters long.";
   }
-  if (password.length > 128) {
-    return "Password must be no longer than 128 characters.";
+  if (Buffer.byteLength(password, "utf8") > 72) {
+    return "Password must be no longer than 72 bytes (about 72 characters).";
   }
   if (!/[a-z]/.test(password)) {
     return "Password must contain a lowercase letter.";
