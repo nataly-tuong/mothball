@@ -116,11 +116,11 @@ router.post(
         data: { verificationToken: hashed, verificationTokenExpiry: expiry },
       });
 
-      await sendMail(
+      void sendMail(
         user.email,
         "Your Mothball verification code",
         welcomeEmailHtml(code),
-      );
+      ).catch((err) => console.error("Verification email failed:", err));
 
       res.status(200).send(genericReply);
     } catch (error) {

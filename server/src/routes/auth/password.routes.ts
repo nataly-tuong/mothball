@@ -52,15 +52,11 @@ router.post(
 
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${raw}`;
 
-        try {
-          await sendMail(
-            user.email,
-            "Reset your Mothball password",
-            forgotPasswordHtml(resetUrl),
-          );
-        } catch (emailError) {
-          console.error("Password reset email failed:", emailError);
-        }
+        void sendMail(
+          user.email,
+          "Reset your Mothball password",
+          forgotPasswordHtml(resetUrl),
+        ).catch((err) => console.error("Password reset email failed:", err));
       }
 
       return res.status(200).send({
