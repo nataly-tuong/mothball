@@ -12,6 +12,11 @@ import {
 import { getPasswordError } from "../../lib/passwordRules.js";
 import { createResetToken, hashToken } from "../../lib/tokens.js";
 
+import {
+  isPasswordBreached,
+  BREACHED_PASSWORD_MESSAGE,
+} from "../../lib/pwnedPassword.js";
+
 const router = Router();
 
 router.post(
@@ -80,6 +85,10 @@ router.post(
     const passwordError = getPasswordError(password);
     if (passwordError) {
       return res.status(400).send({ message: passwordError });
+    }
+
+    if (await isPasswordBreached(password)) {
+      return res.status(400).send({ message: BREACHED_PASSWORD_MESSAGE });
     }
 
     try {
