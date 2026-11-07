@@ -6,6 +6,7 @@ import { sendMail } from "../../lib/mailer.js";
 import { forgotPasswordHtml } from "../../emails/forgotPassword.js";
 import {
   forgotPasswordLimiter,
+  perEmailEmailLimiter,
   resetPasswordLimiter,
   validateResetTokenLimiter,
 } from "../../middleware/rateLimiters.js";
@@ -13,6 +14,8 @@ import { getPasswordError } from "../../lib/passwordRules.js";
 import { createResetToken, hashToken } from "../../lib/tokens.js";
 
 import { hashPassword } from "../../lib/passwordHash.js";
+
+import { passwordChangedHtml } from "../../emails/passwordChanged.js";
 
 import {
   isPasswordBreached,
@@ -24,6 +27,7 @@ const router = Router();
 router.post(
   "/forgot-password",
   forgotPasswordLimiter,
+  perEmailEmailLimiter,
   async (req: Request, res: Response) => {
     const { email } = req.body;
 
@@ -94,11 +98,28 @@ router.post(
     }
 
     try {
+      const hashedToken = hashToken(token);
+
+      const user = await prisma.user.findFirst({
+        where: {
+          resetToken: hashedToken,
+          resetTokenExpiry: { gt: new Date() },
+        },
+        select: { id: true, email: true },
+      });
+
+      if (!user) {
+        return res.status(400).send({
+          message: "This password reset link is invalid or has expired.",
+        });
+      }
+
       const passwordHash = await hashPassword(password);
 
       const result = await prisma.user.updateMany({
         where: {
-          resetToken: hashToken(token),
+          id: user.id,
+          resetToken: hashedToken,
           resetTokenExpiry: { gt: new Date() },
         },
         data: {
@@ -113,6 +134,16 @@ router.post(
         return res.status(400).send({
           message: "This password reset link is invalid or has expired.",
         });
+      }
+
+      try {
+        await sendMail(
+          user.email,
+          "Your Mothball password was changed",
+          passwordChangedHtml(`${process.env.FRONTEND_URL}/forgot-password`),
+        );
+      } catch (emailError) {
+        console.error("Password changed email failed:", emailError);
       }
 
       return res

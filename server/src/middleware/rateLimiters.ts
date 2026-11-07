@@ -70,3 +70,13 @@ export const validateResetTokenLimiter = limiter(
   30,
   "Too many attempts. Please try again later.",
 );
+
+export const perEmailEmailLimiter = limiter(
+  15 * MIN,
+  3,
+  "Too many requests. Please try again later.",
+  (req) =>
+    String(req.body?.email ?? "")
+      .trim()
+      .toLowerCase() || "unknown",
+);

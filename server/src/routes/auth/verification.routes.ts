@@ -8,6 +8,7 @@ import {
   verifyEmailLimiter,
   verifyCodeLimiter,
   resendLimiter,
+  perEmailEmailLimiter,
 } from "../../middleware/rateLimiters.js";
 import {
   createVerificationCode,
@@ -84,6 +85,7 @@ router.post(
 router.post(
   "/resend-verification",
   resendLimiter,
+  perEmailEmailLimiter,
   async (req: Request, res: Response) => {
     const { email } = req.body;
 
