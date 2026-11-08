@@ -1,24 +1,28 @@
 import type { SubmitEvent, JSX } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import PasswordInput from "../components/PasswordInput";
 
 export default function LoginPage(): JSX.Element {
   const navigate = useNavigate();
+  const location = useLocation();
   const { refreshUser } = useAuth();
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const notice =
+    typeof location.state?.message === "string" ? location.state.message : "";
 
   async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
     const form = new FormData(e.currentTarget);
-    const email = form.get("email");
-    const password = form.get("password");
+    const email = String(form.get("email") ?? "").trim();
+    const password = String(form.get("password") ?? "");
 
     setLoading(true);
     try {
@@ -37,9 +41,13 @@ export default function LoginPage(): JSX.Element {
 
       if (!res.ok) {
         if (data?.code === "EMAIL_NOT_VERIFIED") {
-          navigate("/verify-email", {
-            state: { email },
-          });
+          void fetch("/api/auth/resend-verification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          }).catch(() => {});
+
+          navigate("/verify-email", { state: { email } });
           return;
         }
 
@@ -57,13 +65,21 @@ export default function LoginPage(): JSX.Element {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col">
-      <h2 className="mb-8 font-fredoka text-4xl font-medium text-plum">
-        Log in
-      </h2>
+    <form
+      onSubmit={handleSubmit}
+      onChange={() => error && setError("")}
+      className="auth-form"
+    >
+      <h2 className="auth-heading">Log in</h2>
 
-      <div className="mb-5 flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-bold text-plum">
+      {notice && (
+        <p role="status" className="text-sm leading-snug text-plum/70">
+          {notice}
+        </p>
+      )}
+
+      <div className="field">
+        <label htmlFor="email" className="field-label">
           Email
         </label>
         <input
@@ -71,12 +87,15 @@ export default function LoginPage(): JSX.Element {
           name="email"
           type="email"
           placeholder="jane.doe@example.com"
-          className="w-full rounded-lg border border-lavender-gray px-4 py-3 text-base"
+          autoComplete="email"
+          required
+          aria-invalid={error !== ""}
+          className="input"
         />
       </div>
 
-      <div className="mb-4 flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-bold text-plum">
+      <div className="field">
+        <label htmlFor="password" className="field-label">
           Password
         </label>
         <PasswordInput
@@ -84,10 +103,12 @@ export default function LoginPage(): JSX.Element {
           name="password"
           placeholder="your password"
           autoComplete="current-password"
+          required
+          aria-invalid={error !== ""}
         />
       </div>
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <label
           htmlFor="remember"
           className="flex cursor-pointer items-center gap-2 text-sm text-plum"
@@ -100,38 +121,35 @@ export default function LoginPage(): JSX.Element {
           />
           Remember me
         </label>
-        <Link to="/forgot-password" className="text-sm font-medium text-lilac">
+        <Link to="/forgot-password" className="link text-sm">
           Forgot password?
         </Link>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p role="alert" className="error-box">
+          {error}
+        </p>
+      )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-full border border-plum bg-linear-to-b from-plum/80 to-plum py-3 text-base font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 disabled:active:scale-100"
-      >
+      <button type="submit" disabled={loading} className="btn-primary mt-1">
         {loading ? "Logging in..." : "Log in"}
       </button>
 
-      <div className="my-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-lavender-gray" />
-        <span className="text-sm text-plum/60">or</span>
-        <div className="h-px flex-1 bg-lavender-gray" />
+      <div className="divider">
+        <div className="divider-line" />
+        <span className="divider-text">or</span>
+        <div className="divider-line" />
       </div>
 
-      <button
-        type="button"
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-plum/40 bg-linear-to-b from-white to-lavender/60 py-3 text-base font-medium text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum/60 hover:to-lavender hover:shadow-md hover:shadow-plum/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
-      >
+      <button type="button" className="btn-secondary">
         <FcGoogle className="h-5 w-5" />
         Continue with Google
       </button>
 
-      <p className="mt-8 text-center text-sm text-plum/70">
+      <p className="footer-text">
         Don't have an account?{" "}
-        <Link to="/register" className="font-medium text-lilac">
+        <Link to="/register" className="link">
           Sign up
         </Link>
       </p>

@@ -202,7 +202,11 @@ export default function VerifyEmail(): JSX.Element {
       </button>
 
       <p className="footer-text">
-        Check your spam folder.{" "}
+        Wrong email?{" "}
+        <Link to="/register" className="link">
+          Start over
+        </Link>
+        {" · "}
         <Link to="/login" className="link">
           Back to log in
         </Link>

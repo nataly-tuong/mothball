@@ -15,7 +15,7 @@ export default function PasswordInput({
       <input
         {...props}
         type={visible ? "text" : "password"}
-        className="w-full rounded-lg border border-lavender-gray py-2.5 pl-4 pr-11 [&::-ms-reveal]:hidden"
+        className="input pr-11 [&::-ms-reveal]:hidden"
       />
       <button
         type="button"
