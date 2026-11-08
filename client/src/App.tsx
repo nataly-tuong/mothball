@@ -126,7 +126,7 @@ export default function App(): JSX.Element {
           className="flex flex-col items-center bg-lavender/60 bg-cover bg-center bg-blend-overlay px-6 pb-44 pt-36 text-center"
           style={{ backgroundImage: `url(${BgImage})` }}
         >
-          <h1 className="font-fredoka mt-10text-4xl font-medium leading-tight tracking-tight md:text-5xl">
+          <h1 className="font-fredoka mt-10 text-4xl font-medium leading-tight tracking-tight md:text-5xl">
             One closet for multiple people
           </h1>
           <p className="mt-5 mb-10 max-w-xl text-lg text-plum/80">
