@@ -11,69 +11,211 @@ import MothballSVG from "./assets/favicon.svg";
 import BgImage from "./assets/dddepth-061.jpg";
 import { Link } from "react-router-dom";
 
-const features: { label: string; Icon: Icon }[] = [
-  { label: "Join a group", Icon: UsersIcon },
-  { label: "Track listings", Icon: ClipboardTextIcon },
-  { label: "Manage status", Icon: ToggleRightIcon },
+const steps: { title: string; text: string; Icon: Icon }[] = [
+  {
+    title: "Join a group",
+    text: "Invite the people you share a closet with, so everyone sees the same inventory.",
+    Icon: UsersIcon,
+  },
+  {
+    title: "Track listings",
+    text: "Log each item once, so nobody lists the same piece twice.",
+    Icon: ClipboardTextIcon,
+  },
+  {
+    title: "Manage status",
+    text: "Mark what’s listed and what’s still waiting to be uploaded.",
+    Icon: ToggleRightIcon,
+  },
 ];
+
+const previewItems = [
+  { name: "Vintage denim jacket", meta: "Added by Maya", listed: true },
+  { name: "Green wool coat", meta: "Added by Jo", listed: false },
+  { name: "Black ankle boots", meta: "Added by Maya", listed: true },
+];
+
+const glowRing = "shadow-[0_0_0_5px_#f7f7f7]";
+
+const pillBase =
+  "inline-flex items-center justify-center gap-2 rounded-full font-medium transition duration-200 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac";
+
+const primaryButton = `${pillBase} border border-plum bg-linear-to-b from-plum/80 to-plum px-7 py-3 text-base text-white shadow-lg shadow-plum/30 ring-1 ring-inset ring-white/25 hover:brightness-110 hover:shadow-xl hover:shadow-plum/40`;
+
+const secondaryButton = `${pillBase} border border-plum/60 bg-linear-to-b from-white to-lavender/60 px-7 py-3 text-base text-plum shadow-lg shadow-plum/10 ring-1 ring-inset ring-white hover:border-plum hover:to-lavender hover:shadow-xl hover:shadow-plum/20`;
+
+const navButton = `${pillBase} border border-plum bg-linear-to-b from-plum/80 to-plum px-4 py-2 text-sm text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 hover:brightness-110`;
+
+function ClosetPreview(): JSX.Element {
+  return (
+    <div
+      aria-hidden="true"
+      className={`absolute bottom-0 left-1/2 z-10 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 translate-y-1/2 rounded-[30px] bg-white p-5 text-left ${glowRing}`}
+    >
+      <div className="mb-4">
+        <p className="font-fredoka text-xl font-medium leading-tight">
+          Maya &amp; Jo’s closet
+        </p>
+        <p className="text-sm text-plum/60">2 members · 3 items</p>
+      </div>
+
+      <ul className="flex flex-col gap-2.5">
+        {previewItems.map(({ name, meta, listed }) => (
+          <li
+            key={name}
+            className="flex items-center gap-3 rounded-2xl border border-plum/10 p-3"
+          >
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-lavender">
+              <CoatHangerIcon size={22} weight="fill" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-base font-semibold leading-tight">
+                {name}
+              </p>
+              <p className="text-sm text-plum/60">{meta}</p>
+            </div>
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                listed ? "bg-lilac/20 text-plum" : "bg-mist text-plum/70"
+              }`}
+            >
+              {listed ? "Listed" : "To upload"}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export default function App(): JSX.Element {
   return (
-    <main className="flex flex-col min-h-screen">
-      <header className="flex items-center gap-2 pt-1 px-4">
-        <img src={MothballSVG} className="w-5" alt="Mothball icon" />
-        <h1 className="text-3xl text-plum font-gaegu font-bold">Mothball</h1>
-      </header>
-
-      <section
-        className="relative flex flex-1 flex-col items-center justify-center text-center px-6 md:px-20 ml-3 mr-2 mb-3 py-10 rounded-2xl border border-plum/15 ring-1 ring-inset ring-white/50 shadow-lg shadow-plum/10 bg-lavender/60 bg-blend-overlay bg-cover bg-center"
-        style={{ backgroundImage: `url(${BgImage})` }}
-      >
-        <CoatHangerIcon
-          size={150}
-          weight="fill"
-          className="mx-auto mb-4 text-plum"
-          aria-hidden="true"
-        />
-        <h1 className="text-4xl md:text-5xl text-center text-plum font-bold">
-          One closet, multiple people
-        </h1>
-        <h1 className="text-4xl md:text-5xl text-center text-plum font-bold mb-4">
-          Zero duplicates.
-        </h1>
-        <p className="text-lg md:text-xl text-plum/80 mb-8 max-w-xl">
-          Share one closet and always know what's listed and what's still
-          waiting to be uploaded.
-        </p>
-        <div className="flex gap-3">
-          <Link
-            to="/register"
-            className="inline-flex items-center gap-2 rounded-full border border-plum bg-gradient-to-b from-plum/80 to-plum px-7 py-3 text-base font-medium text-white shadow-lg shadow-plum/30 ring-1 ring-inset ring-white/25 transition duration-200 hover:brightness-110 hover:shadow-xl hover:shadow-plum/40 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
-          >
-            Get Started
+    <div className="min-h-screen bg-mist text-plum">
+      <div className="relative">
+        <nav
+          aria-label="Main"
+          className={`absolute inset-x-4 top-4 z-20 mx-auto flex max-w-3xl items-center justify-between rounded-[22px] border border-plum/10 bg-white px-4 py-2 ${glowRing}`}
+        >
+          <Link to="/" className="flex items-center gap-2">
+            <img src={MothballSVG} alt="" className="w-5" />
+            <span className="font-gaegu text-3xl font-bold leading-none">
+              Mothball
+            </span>
           </Link>
 
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-2 rounded-full border border-plum/60 bg-gradient-to-b from-white to-lavender/60 px-7 py-3 text-base font-medium text-plum shadow-lg shadow-plum/10 ring-1 ring-inset ring-white transition duration-200 hover:border-plum hover:from-white hover:to-lavender hover:shadow-xl hover:shadow-plum/20 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
-          >
-            Login
-          </Link>
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <a
+              href="#how-it-works"
+              className="hidden px-2 py-1 transition hover:opacity-60 sm:inline"
+            >
+              How it works
+            </a>
+            <Link to="/login" className="px-2 py-1 transition hover:opacity-60">
+              Log in
+            </Link>
+            <Link to="/register" className={navButton}>
+              Get started
+            </Link>
+          </div>
+        </nav>
+
+        <section
+          className="flex flex-col items-center bg-lavender/60 bg-cover bg-center bg-blend-overlay px-6 pb-44 pt-36 text-center"
+          style={{ backgroundImage: `url(${BgImage})` }}
+        >
+          <h1 className="font-fredoka text-4xl font-medium leading-tight tracking-tight md:text-5xl">
+            One closet, multiple people
+            <span className="block">Zero duplicates.</span>
+          </h1>
+          <p className="mt-5 max-w-xl text-lg text-plum/80">
+            Share one closet and always know what’s listed and what’s still
+            waiting to be uploaded.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link to="/register" className={primaryButton}>
+              Get Started
+            </Link>
+            <Link to="/login" className={secondaryButton}>
+              Login
+            </Link>
+          </div>
+        </section>
+
+        <ClosetPreview />
+      </div>
+
+      <main>
+        <section
+          id="how-it-works"
+          className="mx-auto max-w-2xl scroll-mt-8 px-6 pb-24 pt-44"
+        >
+          <h2 className="font-fredoka text-3xl font-medium leading-tight tracking-tight md:text-4xl">
+            How Mothball works
+          </h2>
+          <p className="mt-4 text-base text-plum/80">
+            One shared closet for everyone who sells from it, with a clear
+            record of what’s done and what’s next.
+          </p>
+
+          <ol className="mt-10 flex flex-col">
+            {steps.map(({ title, text, Icon }) => (
+              <li
+                key={title}
+                className="flex gap-4 border-t border-plum/10 py-6 last:border-b"
+              >
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-plum/10 bg-white">
+                  <Icon size={26} weight="fill" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold leading-snug">
+                    {title}
+                  </h3>
+                  <p className="mt-1 text-base text-plum/70">{text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="mx-auto max-w-2xl px-6 pb-24 text-center">
+          <h2 className="font-fredoka text-3xl font-medium leading-tight tracking-tight md:text-4xl">
+            Start your shared closet
+          </h2>
+          <p className="mt-4 text-base text-plum/80">
+            Create an account and invite the people you share with.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link to="/register" className={primaryButton}>
+              Get Started
+            </Link>
+            <Link to="/login" className={secondaryButton}>
+              Login
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-plum/10">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-6 text-sm text-plum/70">
+          <span className="font-gaegu text-2xl font-bold text-plum">
+            Mothball
+          </span>
+          <nav aria-label="Footer" className="flex gap-5">
+            <Link
+              to="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition hover:text-plum"
+            >
+              Privacy
+            </Link>
+            <Link to="/login" className="transition hover:text-plum">
+              Log in
+            </Link>
+          </nav>
+          <span>© {new Date().getFullYear()} Mothball</span>
         </div>
-      </section>
-
-      <footer className="bg-white pb-5">
-        <ul className="mx-auto flex max-w-4xl justify-around px-6">
-          {features.map(({ label, Icon }) => (
-            <li key={label} className="flex flex-col items-center gap-3">
-              <div className="rounded-xl text-plum">
-                <Icon size={50} weight="fill" aria-hidden="true" />
-              </div>
-              <span className="text-lg text-plum">{label}</span>
-            </li>
-          ))}
-        </ul>
       </footer>
-    </main>
+    </div>
   );
 }

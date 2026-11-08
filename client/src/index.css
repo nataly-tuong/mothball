@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Gaegu&family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&display=swap");
+
 @import "tailwindcss";
 
 @theme {
@@ -11,6 +12,7 @@
   --color-coral: #d95f70;
   --font-gaegu: "Gaegu", comic-sans;
   --font-fredoka: "Fredoka", sans-serif;
+  --color-mist: #f7f7f7;
 }
 
 body {
