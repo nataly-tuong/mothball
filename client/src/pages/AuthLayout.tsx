@@ -27,12 +27,6 @@ export default function AuthLayout(): JSX.Element {
         <h1 className="text-7xl text-center text-plum font-gaegu font-extrabold mb-5">
           Mothball
         </h1>
-        <h2 className="text-3xl font-fredoka text-center text-plum font-medium">
-          Shared closet.
-        </h2>
-        <h2 className="text-3xl font-fredoka text-center text-plum font-medium mb-3">
-          Syncs inventory.
-        </h2>
         <p className="text-plum">
           "Uh, which one again? idk. oh <span className="italic">that one</span>
           "

@@ -123,13 +123,11 @@ export default function App(): JSX.Element {
           className="flex flex-col items-center bg-lavender/60 bg-cover bg-center bg-blend-overlay px-6 pb-44 pt-36 text-center"
           style={{ backgroundImage: `url(${BgImage})` }}
         >
-          <h1 className="font-fredoka text-4xl font-medium leading-tight tracking-tight md:text-5xl">
-            One closet, multiple people
-            <span className="block">Zero duplicates.</span>
+          <h1 className="font-fredoka mt-10 text-4xl font-medium leading-tight tracking-tight md:text-5xl">
+            One closet for multiple people
           </h1>
-          <p className="mt-5 max-w-xl text-lg text-plum/80">
-            Share one closet and always know what’s listed and what’s still
-            waiting to be uploaded.
+          <p className="mt-5 mb-10 max-w-xl text-lg text-plum/80">
+            Always know what’s listed and what’s still waiting to be uploaded.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/register" className={primaryButton}>
