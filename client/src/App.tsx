@@ -113,7 +113,10 @@ export default function App(): JSX.Element {
             <Link to="/login" className="px-2 py-1 transition hover:opacity-60">
               Log in
             </Link>
-            <Link to="/register" className={navButton}>
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center rounded-full border-[1.5px] font-semibold transition duration-200 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac border-transparent bg-plum text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25),0_0_0_1px_rgba(0,0,0,0.15),0_3px_2px_0_rgba(0,0,0,0.06)] hover:brightness-110 px-6 py-3"
+            >
               Get started
             </Link>
           </div>
@@ -123,7 +126,7 @@ export default function App(): JSX.Element {
           className="flex flex-col items-center bg-lavender/60 bg-cover bg-center bg-blend-overlay px-6 pb-44 pt-36 text-center"
           style={{ backgroundImage: `url(${BgImage})` }}
         >
-          <h1 className="font-fredoka mt-10 text-4xl font-medium leading-tight tracking-tight md:text-5xl">
+          <h1 className="font-fredoka mt-10text-4xl font-medium leading-tight tracking-tight md:text-5xl">
             One closet for multiple people
           </h1>
           <p className="mt-5 mb-10 max-w-xl text-lg text-plum/80">
