@@ -13,6 +13,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
 import ClosetPage from "./pages/ClosetPage";
 
@@ -22,6 +23,7 @@ import { SampleListings } from "./components/SampleListings";
 
 const router = createBrowserRouter([
   { path: "/", element: <App /> },
+  { path: "/privacy", element: <PrivacyPolicyPage /> },
   {
     element: <ProtectedRoute />,
     children: [

@@ -266,6 +266,19 @@ export default function RegistrationPage(): JSX.Element {
         {loading ? "Creating account..." : "Register"}
       </button>
 
+      <p className="text-center text-xs text-plum/60">
+        By signing up you agree to our{" "}
+        <Link
+          to="/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
       <div className="divider">
         <div className="divider-line" />
         <span className="divider-text">or</span>

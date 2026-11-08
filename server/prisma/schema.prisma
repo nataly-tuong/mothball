@@ -13,17 +13,22 @@ datasource db {
 }
 
 model User {
-  id                        Int      @id @default(autoincrement())
-  name                      String
-  email                     String   @unique
-  emailVerified             Boolean  @default(false)
+  id            Int     @id @default(autoincrement())
+  name          String
+  email         String  @unique
+  emailVerified Boolean @default(false)
 
-  verificationToken         String?
-  verificationTokenExpiry   DateTime?
-  passwordHash              String
-  resetToken                String?
-  resetTokenExpiry          DateTime?
+  passwordHash  String?
+  googleId      String? @unique
 
-  createdAt                 DateTime @default(now())
-  tokenVersion Int @default(0)
+  verificationToken       String?
+  verificationTokenExpiry DateTime?
+
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+
+  tokenVersion Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([emailVerified, createdAt])
 }

@@ -80,3 +80,10 @@ export const perEmailEmailLimiter = limiter(
       .trim()
       .toLowerCase() || "unknown",
 );
+
+export const accountLimiter = limiter(
+  15 * MIN,
+  5,
+  "Too many attempts. Please try again later.",
+  (req) => String(req.userId ?? "unknown"),
+);
