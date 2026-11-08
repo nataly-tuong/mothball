@@ -30,9 +30,9 @@ const steps: { title: string; text: string; Icon: Icon }[] = [
 ];
 
 const previewItems = [
-  { name: "Vintage denim jacket", meta: "Added by Maya", listed: true },
-  { name: "Green wool coat", meta: "Added by Jo", listed: false },
-  { name: "Black ankle boots", meta: "Added by Maya", listed: true },
+  { name: "Vintage denim jacket", meta: "Added by Viktor", listed: true },
+  { name: "Green wool coat", meta: "Added by Caitlyn", listed: false },
+  { name: "Black ankle boots", meta: "Added by Viktor", listed: true },
 ];
 
 const glowRing = "shadow-[0_0_0_5px_#f7f7f7]";
@@ -54,7 +54,7 @@ function ClosetPreview(): JSX.Element {
     >
       <div className="mb-4">
         <p className="font-fredoka text-xl font-medium leading-tight">
-          Maya &amp; Jo’s closet
+          Viktor &amp; Caitlyn's closet
         </p>
         <p className="text-sm text-plum/60">2 members · 3 items</p>
       </div>
@@ -208,9 +208,6 @@ export default function App(): JSX.Element {
               className="transition hover:text-plum"
             >
               Privacy
-            </Link>
-            <Link to="/login" className="transition hover:text-plum">
-              Log in
             </Link>
           </nav>
           <span>© {new Date().getFullYear()} Mothball</span>
