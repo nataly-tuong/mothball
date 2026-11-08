@@ -42,7 +42,7 @@ router.post(
         where: { email: cleanEmail },
       });
 
-      if (user && user.emailVerified) {
+      if (user) {
         const { raw, hashed, expiry } = createResetToken();
 
         await prisma.user.update({
@@ -123,6 +123,9 @@ router.post(
           resetToken: null,
           resetTokenExpiry: null,
           tokenVersion: { increment: 1 },
+          emailVerified: true,
+          verificationToken: null,
+          verificationTokenExpiry: null,
         },
       });
 
