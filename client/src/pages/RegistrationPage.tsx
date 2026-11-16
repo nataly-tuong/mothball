@@ -190,7 +190,7 @@ export default function RegistrationPage(): JSX.Element {
       await refreshUser();
       navigate("/verify-email", { state: { email: String(email ?? "") } });
     } catch {
-      setError("Can't reach the server. Please try again.");
+      setError("No connection. Check your Wi-Fi or data and try again.");
     } finally {
       setLoading(false);
     }

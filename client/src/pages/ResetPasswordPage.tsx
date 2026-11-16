@@ -49,7 +49,9 @@ export default function ResetPasswordPage(): JSX.Element {
         }
       } catch {
         if (cancelled) return;
-        setTokenMessage("Can't reach the server. Please try again.");
+        setTokenMessage(
+          "No connection. Check your Wi-Fi or data and try again.",
+        );
         setTokenStatus("invalid");
       }
     }
@@ -137,7 +139,7 @@ export default function ResetPasswordPage(): JSX.Element {
         },
       });
     } catch {
-      setError("Can't reach the server. Please try again.");
+      setError("No connection. Check your Wi-Fi or data and try again.");
     } finally {
       setLoading(false);
     }

@@ -72,7 +72,9 @@ export default function VerifyEmail(): JSX.Element {
         );
         setCode("");
       })
-      .catch(() => setError("Can't reach the server. Please try again."))
+      .catch(() =>
+        setError("No connection. Check your Wi-Fi or data and try again."),
+      )
       .finally(() => setSubmitting(false));
   }, [linkEmail, linkCode, refreshUser, navigate]);
 
@@ -113,7 +115,7 @@ export default function VerifyEmail(): JSX.Element {
       await refreshUser();
       navigate("/closet", { replace: true });
     } catch {
-      setError("Can't reach the server. Please try again.");
+      setError("No connection. Check your Wi-Fi or data and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -144,7 +146,7 @@ export default function VerifyEmail(): JSX.Element {
       setInfo(data?.message ?? "A new code is on its way.");
       setCooldown(RESEND_COOLDOWN);
     } catch {
-      setError("Can't reach the server. Please try again.");
+      setError("No connection. Check your Wi-Fi or data and try again.");
     }
   }
 

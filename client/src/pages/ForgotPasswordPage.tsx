@@ -40,7 +40,7 @@ export default function ForgotPasswordPage(): JSX.Element {
       setCooldown(RESEND_COOLDOWN);
       return true;
     } catch {
-      setError("Can't reach the server. Please try again.");
+      setError("No connection. Check your Wi-Fi or data and try again.");
       return false;
     } finally {
       setLoading(false);

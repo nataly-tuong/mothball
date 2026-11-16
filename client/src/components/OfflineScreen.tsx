@@ -1,6 +1,7 @@
 import { useState, useSyncExternalStore, type JSX } from "react";
 import { WifiSlashIcon } from "@phosphor-icons/react";
 import MothballSVG from "../assets/favicon.svg";
+import { clearNetworkDown, isNetworkDown, subscribeNetwork } from "../lib/api";
 
 function subscribe(callback: () => void) {
   window.addEventListener("online", callback);
@@ -17,17 +18,26 @@ export default function OfflineScreen(): JSX.Element | null {
     () => navigator.onLine,
     () => true,
   );
+  const requestFailed = useSyncExternalStore(
+    subscribeNetwork,
+    isNetworkDown,
+    () => false,
+  );
   const [checking, setChecking] = useState(false);
+  const [stillOffline, setStillOffline] = useState(false);
 
-  if (online) return null;
+  if (online && !requestFailed) return null;
 
   async function retry() {
     setChecking(true);
+    setStillOffline(false);
     try {
       await fetch("/api/health", { cache: "no-store" });
+      clearNetworkDown();
       window.location.reload();
     } catch {
       setChecking(false);
+      setStillOffline(true);
     }
   }
 
@@ -56,9 +66,14 @@ export default function OfflineScreen(): JSX.Element | null {
           You're offline
         </h2>
         <p className="text-sm leading-relaxed text-plum/70">
-          Mothball needs a connection to keep everyone's closet in sync. This
-          will go away as soon as you're back online.
+          Mothball needs Wi-Fi or data to keep everyone's closet in sync.
+          Reconnect and tap Try again.
         </p>
+        {stillOffline && (
+          <p role="status" className="text-sm font-medium text-coral">
+            Still no connection.
+          </p>
+        )}
         <button
           type="button"
           onClick={retry}

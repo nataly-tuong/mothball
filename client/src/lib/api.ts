@@ -2,11 +2,34 @@ export type ApiResult<T> =
   | { ok: true; status: number; data: T }
   | { ok: false; status: number; message: string };
 
-const NETWORK_ERROR = "Can't reach the server. Please try again.";
+const NETWORK_ERROR = "No connection. Check your Wi-Fi or data and try again.";
 const WAKE_TIMEOUT_MS = 90_000;
 const WAKE_DELAYS_MS = [1500, 2500, 4000, 5000];
 
 let waking = false;
+let networkDown = false;
+const networkListeners = new Set<() => void>();
+
+function setNetworkDown(value: boolean) {
+  if (networkDown === value) return;
+  networkDown = value;
+  for (const listener of networkListeners) listener();
+}
+
+export function isNetworkDown() {
+  return networkDown;
+}
+
+export function subscribeNetwork(listener: () => void) {
+  networkListeners.add(listener);
+  return () => {
+    networkListeners.delete(listener);
+  };
+}
+
+export function clearNetworkDown() {
+  setNetworkDown(false);
+}
 const wakeListeners = new Set<() => void>();
 
 function setWaking(value: boolean) {
@@ -48,7 +71,14 @@ export async function apiFetch(
 
   try {
     for (;;) {
-      const res = await fetch(input, { credentials: "include", ...init });
+      let res: Response;
+      try {
+        res = await fetch(input, { credentials: "include", ...init });
+      } catch (err) {
+        if (err instanceof TypeError) setNetworkDown(true);
+        throw err;
+      }
+      setNetworkDown(false);
 
       if (!isWakeResponse(res, method)) return res;
       if (Date.now() - started > WAKE_TIMEOUT_MS) return res;
