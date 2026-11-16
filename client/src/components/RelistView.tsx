@@ -116,9 +116,9 @@ export default function RelistView({
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3 rounded-2xl bg-lavender/60 p-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-relaxed text-plum">
-          Older Depop listings get buried. Refresh anything listed for{" "}
-          <strong>{staleDays}+ days</strong> (edit or re-upload it on Depop),
-          then mark it relisted here.
+          Older listings get buried. Refresh anything listed for{" "}
+          <strong>{staleDays}+ days</strong> (edit or re-upload it), then mark
+          it relisted here.
         </p>
         {isOwner && (
           <label className="flex shrink-0 items-center gap-2 text-sm text-plum">

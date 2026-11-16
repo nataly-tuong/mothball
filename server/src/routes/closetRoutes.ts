@@ -56,6 +56,7 @@ const TEXT_LIMITS = {
   brand: 60,
   size: 30,
   category: 60,
+  subcategory: 60,
   color: 30,
   notes: 500,
 } as const;
@@ -69,12 +70,13 @@ const itemSelect = {
   size: true,
   condition: true,
   category: true,
+  subcategory: true,
   color: true,
   status: true,
   priceCents: true,
   minPriceCents: true,
   soldPriceCents: true,
-  depopUrl: true,
+  listingUrl: true,
   notes: true,
   listedAt: true,
   refreshedAt: true,
@@ -99,12 +101,13 @@ type ItemInput = {
   size?: string | null;
   condition?: ItemCondition | null;
   category?: string | null;
+  subcategory?: string | null;
   color?: string | null;
   status?: ItemStatus;
   priceCents?: number | null;
   minPriceCents?: number | null;
   soldPriceCents?: number | null;
-  depopUrl?: string | null;
+  listingUrl?: string | null;
   notes?: string | null;
   ownerId?: number | null;
   photos?: PhotoInput[];
@@ -160,29 +163,25 @@ function parseHashtags(
   }
 
   if (tags.length > MAX_HASHTAGS) {
-    return { error: `Depop allows up to ${MAX_HASHTAGS} hashtags.` };
+    return { error: `Add up to ${MAX_HASHTAGS} hashtags.` };
   }
   return { value: tags };
 }
 
-function parseDepopUrl(
+function parseListingUrl(
   value: unknown,
 ): { value: string | null } | { error: string } {
   if (value === null || value === "") return { value: null };
-  if (typeof value !== "string") return { error: "Invalid Depop link." };
+  if (typeof value !== "string") return { error: "Invalid listing link." };
 
   try {
     const url = new URL(value.trim());
-    const host = url.hostname.toLowerCase();
-    if (
-      url.protocol !== "https:" ||
-      !(host === "depop.com" || host.endsWith(".depop.com"))
-    ) {
-      return { error: "Paste a link from depop.com." };
+    if (url.protocol !== "https:" || url.toString().length > 500) {
+      return { error: "Paste a full https:// link." };
     }
     return { value: url.toString() };
   } catch {
-    return { error: "Paste a link from depop.com." };
+    return { error: "Paste a full https:// link." };
   }
 }
 
@@ -214,6 +213,7 @@ function parseItemInput(
     ["brand", "Brand"],
     ["size", "Size"],
     ["category", "Category"],
+    ["subcategory", "Subcategory"],
     ["color", "Color"],
     ["notes", "Notes"],
   ] as const;
@@ -261,10 +261,10 @@ function parseItemInput(
     data[key] = parsed.value;
   }
 
-  if (input.depopUrl !== undefined) {
-    const parsed = parseDepopUrl(input.depopUrl);
+  if (input.listingUrl !== undefined) {
+    const parsed = parseListingUrl(input.listingUrl);
     if ("error" in parsed) return parsed;
-    data.depopUrl = parsed.value;
+    data.listingUrl = parsed.value;
   }
 
   if (input.ownerId !== undefined) {
@@ -673,35 +673,6 @@ router.patch(
     }
 
     res.sendStatus(204);
-  },
-);
-
-router.post(
-  "/:closetId/invite-code",
-  requireMember,
-  requireOwner,
-  closetWriteLimiter,
-  async (req: Request, res: Response) => {
-    for (let attempt = 0; attempt < 5; attempt++) {
-      try {
-        const closet = await prisma.closet.update({
-          where: { id: req.closetId },
-          data: { inviteCode: createInviteCode() },
-          select: { inviteCode: true },
-        });
-        return res.send(closet);
-      } catch (err) {
-        if (
-          err instanceof Prisma.PrismaClientKnownRequestError &&
-          err.code === "P2002"
-        ) {
-          continue;
-        }
-        throw err;
-      }
-    }
-
-    res.status(500).send({ message: "Couldn't make a new code. Try again." });
   },
 );
 

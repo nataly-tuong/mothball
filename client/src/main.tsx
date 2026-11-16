@@ -35,7 +35,7 @@ const router = createBrowserRouter([
       { path: "/closet/:closetId", element: <ClosetPage view="items" /> },
       {
         path: "/closet/:closetId/relist",
-        element: <ClosetPage view="relist" />,
+        element: <ClosetPage view="items" />,
       },
       {
         path: "/closet/:closetId/activity",

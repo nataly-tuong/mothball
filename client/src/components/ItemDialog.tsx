@@ -10,7 +10,7 @@ import { CameraIcon, StarIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import Modal from "./Modal";
 import { api } from "../lib/api";
 import {
-  CATEGORY_SUGGESTIONS,
+  CATEGORIES,
   CONDITION_OPTIONS,
   DESCRIPTION_MAX,
   MAX_HASHTAGS,
@@ -128,6 +128,17 @@ function ItemForm({
   );
   const [status, setStatus] = useState<ItemStatus>(item?.status ?? "TO_UPLOAD");
   const [description, setDescription] = useState(item?.description ?? "");
+  const [category, setCategory] = useState(item?.category ?? "");
+  const [subcategory, setSubcategory] = useState(item?.subcategory ?? "");
+
+  const categoryOptions = Object.keys(CATEGORIES);
+  if (category && !categoryOptions.includes(category)) {
+    categoryOptions.push(category);
+  }
+  const subcategoryOptions = [...(CATEGORIES[category] ?? [])];
+  if (subcategory && !subcategoryOptions.includes(subcategory)) {
+    subcategoryOptions.push(subcategory);
+  }
   const [hashtagInput, setHashtagInput] = useState(
     formatHashtags(item?.hashtags ?? []),
   );
@@ -238,7 +249,7 @@ function ItemForm({
     }
 
     if (hashtags.length > MAX_HASHTAGS) {
-      setError(`Depop allows up to ${MAX_HASHTAGS} hashtags.`);
+      setError(`Add up to ${MAX_HASHTAGS} hashtags.`);
       return;
     }
 
@@ -251,13 +262,14 @@ function ItemForm({
       brand: read("brand") || null,
       size: read("size") || null,
       condition: read("condition") || null,
-      category: read("category") || null,
+      category: category || null,
+      subcategory: category && subcategory ? subcategory : null,
       color: read("color") || null,
       status,
       priceCents,
       minPriceCents,
       soldPriceCents,
-      depopUrl: read("depopUrl") || null,
+      listingUrl: read("listingUrl") || null,
       notes: read("notes") || null,
       ownerId: ownerValue ? Number(ownerValue) : null,
       photos: tiles.flatMap((tile) =>
@@ -385,8 +397,8 @@ function ItemForm({
               )}
             </ul>
             <p className="text-xs text-plum/60">
-              Photos are cropped to squares like Depop. The first one is the
-              cover; tap the star to change it.
+              Photos are cropped to squares. The first one is the cover; tap the
+              star to change it.
             </p>
             <input
               ref={fileInput}
@@ -421,7 +433,7 @@ function ItemForm({
       <div className="field">
         <div className="flex items-baseline justify-between">
           <label htmlFor="item-description" className="field-label">
-            Depop description
+            Description
           </label>
           <span className="text-xs text-plum/50">
             {description.length}/{DESCRIPTION_MAX}
@@ -520,21 +532,44 @@ function ItemForm({
           <label htmlFor="item-category" className="field-label">
             Category
           </label>
-          <input
+          <select
             id="item-category"
-            name="category"
-            type="text"
-            list="category-suggestions"
-            maxLength={60}
-            defaultValue={item?.category ?? ""}
-            placeholder="Jackets"
-            className="input"
-          />
-          <datalist id="category-suggestions">
-            {CATEGORY_SUGGESTIONS.map((category) => (
-              <option key={category} value={category} />
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setSubcategory("");
+            }}
+            className="input cursor-pointer"
+          >
+            <option value="">Not set</option>
+            {categoryOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
             ))}
-          </datalist>
+          </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="item-subcategory" className="field-label">
+            Subcategory
+          </label>
+          <select
+            id="item-subcategory"
+            value={subcategory}
+            onChange={(e) => setSubcategory(e.target.value)}
+            disabled={!category}
+            className="input cursor-pointer disabled:cursor-not-allowed disabled:bg-mist disabled:text-plum/40"
+          >
+            <option value="">
+              {category ? "Not set" : "Pick a category first"}
+            </option>
+            {subcategoryOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="field">
@@ -640,15 +675,15 @@ function ItemForm({
       </div>
 
       <div className="field">
-        <label htmlFor="item-depop-url" className="field-label">
-          Depop link
+        <label htmlFor="item-listing-url" className="field-label">
+          Listing link
         </label>
         <input
-          id="item-depop-url"
-          name="depopUrl"
+          id="item-listing-url"
+          name="listingUrl"
           type="url"
-          defaultValue={item?.depopUrl ?? ""}
-          placeholder="https://www.depop.com/products/..."
+          defaultValue={item?.listingUrl ?? ""}
+          placeholder="https://..."
           className="input"
         />
       </div>

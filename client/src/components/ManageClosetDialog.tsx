@@ -1,16 +1,18 @@
 import { useState, type JSX, type SubmitEvent } from "react";
 import {
-  ArrowsClockwiseIcon,
   CheckIcon,
   CopyIcon,
   CrownSimpleIcon,
-  LinkIcon,
   ShareNetworkIcon,
   UserMinusIcon,
 } from "@phosphor-icons/react";
 import Modal from "./Modal";
 import { api } from "../lib/api";
-import { formatInviteCode, type ClosetDetail } from "../lib/closets";
+import {
+  STALE_DAY_OPTIONS,
+  formatInviteCode,
+  type ClosetDetail,
+} from "../lib/closets";
 import { inviteLink, inviteMessage } from "../lib/invites";
 
 type ManageClosetDialogProps = {
@@ -41,31 +43,15 @@ function ManageClosetContent({
   const isOwner = closet.role === "OWNER";
 
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState<"code" | "link" | null>(null);
+  const [copied, setCopied] = useState<"code" | "invite" | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<number | null>(null);
 
   const myName = closet.members.find((m) => m.id === currentUserId)?.name;
   const link = inviteLink(closet.inviteCode, myName);
-  const canShare = typeof navigator.share === "function";
 
-  async function shareInvite() {
-    setError("");
-    try {
-      await navigator.share({
-        title: `Join ${closet.name} on Mothball`,
-        text: inviteMessage(closet.name),
-        url: link,
-      });
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      void copy("link");
-    }
-  }
-
-  async function copy(kind: "code" | "link") {
-    const text = kind === "link" ? link : formatInviteCode(closet.inviteCode);
+  async function copyText(kind: "invite" | "code", text: string) {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
@@ -73,6 +59,26 @@ function ManageClosetContent({
     } catch {
       setError("Couldn't copy. Select the code and copy it instead.");
     }
+  }
+
+  async function shareInvite() {
+    setError("");
+    const message = inviteMessage(closet.name);
+
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: `Join ${closet.name} on Mothball`,
+          text: message,
+          url: link,
+        });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+
+    await copyText("invite", `${message}\n${link}`);
   }
 
   async function run(action: () => Promise<{ ok: boolean; message?: string }>) {
@@ -95,13 +101,6 @@ function ManageClosetContent({
 
     const ok = await run(() =>
       api(`/api/closets/${closet.id}`, { method: "PATCH", body: { name } }),
-    );
-    if (ok) onChanged();
-  }
-
-  async function regenerateCode() {
-    const ok = await run(() =>
-      api(`/api/closets/${closet.id}/invite-code`, { method: "POST" }),
     );
     if (ok) onChanged();
   }
@@ -170,38 +169,30 @@ function ManageClosetContent({
       <div className="flex flex-col gap-2">
         <span className="field-label">Invite people</span>
         <p className="muted">
-          Send the link, or share the code so they can enter it when they sign
-          up or on the Join a closet screen.
+          Share an invite link, or give people the code to enter when they sign
+          up or join a closet.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <code className="rounded-lg bg-lavender px-4 py-2 font-semibold tracking-[0.2em] text-plum select-all">
             {formatInviteCode(closet.inviteCode)}
           </code>
-          {canShare && (
-            <button
-              type="button"
-              onClick={shareInvite}
-              className="btn-small-primary"
-            >
-              <ShareNetworkIcon size={16} aria-hidden="true" />
-              Share invite
-            </button>
-          )}
           <button
             type="button"
-            onClick={() => copy("link")}
-            className={canShare ? "btn-small-secondary" : "btn-small-primary"}
+            onClick={shareInvite}
+            className="btn-small-primary"
           >
-            {copied === "link" ? (
+            {copied === "invite" ? (
               <CheckIcon size={16} weight="bold" aria-hidden="true" />
             ) : (
-              <LinkIcon size={16} aria-hidden="true" />
+              <ShareNetworkIcon size={16} aria-hidden="true" />
             )}
-            {copied === "link" ? "Link copied" : "Copy invite link"}
+            {copied === "invite" ? "Invite copied" : "Share invite"}
           </button>
           <button
             type="button"
-            onClick={() => copy("code")}
+            onClick={() =>
+              copyText("code", formatInviteCode(closet.inviteCode))
+            }
             className="btn-small-secondary"
           >
             {copied === "code" ? (
@@ -211,20 +202,40 @@ function ManageClosetContent({
             )}
             {copied === "code" ? "Copied" : "Copy code"}
           </button>
-          {isOwner && (
-            <button
-              type="button"
-              onClick={regenerateCode}
-              disabled={busy}
-              className="btn-small-secondary"
-              title="Make a new code. The old one stops working."
-            >
-              <ArrowsClockwiseIcon size={16} aria-hidden="true" />
-              New code
-            </button>
-          )}
         </div>
       </div>
+
+      {isOwner && (
+        <label className="flex items-center justify-between gap-3 text-sm text-plum">
+          <span>
+            <span className="field-label block">Refresh reminder</span>
+            <span className="text-plum/60">
+              Flag listings that have been up this long.
+            </span>
+          </span>
+          <select
+            value={closet.staleDays}
+            disabled={busy}
+            onChange={async (e) => {
+              const staleDays = Number(e.target.value);
+              const ok = await run(() =>
+                api(`/api/closets/${closet.id}`, {
+                  method: "PATCH",
+                  body: { staleDays },
+                }),
+              );
+              if (ok) onChanged();
+            }}
+            className="shrink-0 cursor-pointer rounded-full border border-lavender-gray bg-white px-3 py-1 text-plum focus-visible:outline-2 focus-visible:outline-lilac"
+          >
+            {STALE_DAY_OPTIONS.map((days) => (
+              <option key={days} value={days}>
+                {days} days
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <div className="flex flex-col gap-2">
         <span className="field-label">Members ({closet.members.length})</span>

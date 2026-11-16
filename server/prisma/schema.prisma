@@ -110,12 +110,13 @@ model Item {
   size           String?
   condition      ItemCondition?
   category       String?
+  subcategory    String?
   color          String?
   status         ItemStatus     @default(TO_UPLOAD)
   priceCents     Int?
   minPriceCents  Int?
   soldPriceCents Int?
-  depopUrl       String?
+  listingUrl     String?        @map("depopUrl")
   notes          String?
   listedAt       DateTime?
   refreshedAt    DateTime?

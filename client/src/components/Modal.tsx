@@ -24,6 +24,7 @@ export default function Modal({
 
     if (open && !dialog.open) {
       dialog.showModal();
+      dialog.focus();
     } else if (!open && dialog.open) {
       dialog.close();
     }
@@ -40,6 +41,7 @@ export default function Modal({
         if (e.target === e.currentTarget) onClose();
       }}
       aria-labelledby="modal-title"
+      tabIndex={-1}
       className={`m-auto max-h-[92dvh] w-[calc(100%-1rem)] overflow-y-auto overscroll-contain ${size === "lg" ? "max-w-3xl" : "max-w-lg"} rounded-2xl border border-plum/15 bg-white p-0 text-plum shadow-xl shadow-plum/25 backdrop:bg-plum/40 backdrop:backdrop-blur-[2px]`}
     >
       {open && (

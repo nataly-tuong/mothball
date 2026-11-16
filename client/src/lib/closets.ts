@@ -50,12 +50,13 @@ export type Item = {
   size: string | null;
   condition: ItemCondition | null;
   category: string | null;
+  subcategory: string | null;
   color: string | null;
   status: ItemStatus;
   priceCents: number | null;
   minPriceCents: number | null;
   soldPriceCents: number | null;
-  depopUrl: string | null;
+  listingUrl: string | null;
   notes: string | null;
   listedAt: string | null;
   refreshedAt: string | null;
@@ -83,28 +84,112 @@ export const CONDITION_LABELS = Object.fromEntries(
   CONDITION_OPTIONS.map(({ value, label }) => [value, label]),
 ) as Record<ItemCondition, string>;
 
-export const CATEGORY_SUGGESTIONS = [
-  "Tops",
-  "T-shirts",
-  "Shirts",
-  "Sweaters",
-  "Hoodies",
-  "Jackets",
-  "Coats",
-  "Dresses",
-  "Skirts",
-  "Jeans",
-  "Pants",
-  "Shorts",
-  "Activewear",
-  "Shoes",
-  "Sneakers",
-  "Boots",
-  "Bags",
-  "Jewelry",
-  "Accessories",
-  "Hats",
-];
+export const CATEGORIES: Record<string, string[]> = {
+  Tops: [
+    "T-shirts",
+    "Tank tops",
+    "Crop tops",
+    "Blouses",
+    "Shirts",
+    "Polo shirts",
+    "Bodysuits",
+    "Sweatshirts",
+    "Hoodies",
+    "Sweaters",
+    "Cardigans",
+    "Other",
+  ],
+  Bottoms: [
+    "Jeans",
+    "Trousers",
+    "Sweatpants",
+    "Leggings",
+    "Shorts",
+    "Skirts",
+    "Other",
+  ],
+  Dresses: ["Mini dresses", "Midi dresses", "Maxi dresses", "Other"],
+  "Coats & jackets": [
+    "Jackets",
+    "Coats",
+    "Puffer jackets",
+    "Denim jackets",
+    "Leather jackets",
+    "Bomber jackets",
+    "Blazers",
+    "Vests",
+    "Other",
+  ],
+  "Jumpsuits & playsuits": ["Jumpsuits", "Playsuits", "Overalls"],
+  Activewear: ["Tops", "Bottoms", "Sports bras", "Tracksuits", "Other"],
+  Swimwear: ["Bikinis", "One-pieces", "Swim shorts", "Cover-ups"],
+  "Lingerie & sleepwear": ["Bras", "Underwear", "Pajamas", "Robes", "Other"],
+  Suits: ["Suits", "Suit jackets", "Suit trousers", "Waistcoats"],
+  Shoes: [
+    "Sneakers",
+    "Boots",
+    "Heels",
+    "Flats",
+    "Sandals",
+    "Loafers",
+    "Slippers",
+    "Other",
+  ],
+  Bags: [
+    "Handbags",
+    "Shoulder bags",
+    "Crossbody bags",
+    "Tote bags",
+    "Backpacks",
+    "Clutches",
+    "Wallets & purses",
+    "Other",
+  ],
+  Accessories: [
+    "Hats",
+    "Belts",
+    "Scarves",
+    "Sunglasses",
+    "Gloves",
+    "Hair accessories",
+    "Watches",
+    "Other",
+  ],
+  Jewelry: [
+    "Necklaces",
+    "Earrings",
+    "Rings",
+    "Bracelets",
+    "Anklets",
+    "Body jewelry",
+    "Other",
+  ],
+};
+
+export function categoryLabel(item: Pick<Item, "category" | "subcategory">) {
+  return [item.category, item.subcategory].filter(Boolean).join(" › ");
+}
+
+export const STATUS_THEME: Record<
+  ItemStatus,
+  { card: string; chip: string; active: string }
+> = {
+  TO_UPLOAD: {
+    card: "bg-orange-50/80 border-orange-200",
+    chip: "border-orange-200 bg-orange-100/80 text-orange-900",
+    active: "bg-orange-200 text-orange-950",
+  },
+  LISTED: {
+    card: "bg-violet-50/80 border-violet-200",
+    chip: "border-violet-200 bg-violet-100/80 text-violet-900",
+    active: "bg-violet-200 text-violet-950",
+  },
+  SOLD: {
+    card: "bg-emerald-50/80 border-emerald-200",
+    chip: "border-emerald-200 bg-emerald-100/80 text-emerald-900",
+    active: "bg-emerald-200 text-emerald-950",
+  },
+};
 
 export const STATUS_OPTIONS: { value: ItemStatus; label: string }[] = [
   { value: "TO_UPLOAD", label: "To upload" },
@@ -189,7 +274,7 @@ export function parseHashtags(input: string) {
   return tags;
 }
 
-export function depopDescription(item: Item) {
+export function fullDescription(item: Item) {
   return [item.description?.trim(), formatHashtags(item.hashtags)]
     .filter(Boolean)
     .join("\n\n");

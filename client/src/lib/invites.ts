@@ -20,7 +20,7 @@ export function inviteLink(code: string, from?: string) {
 }
 
 export function inviteMessage(closetName: string) {
-  return `Come join my closet "${closetName}" on Mothball! We use it to keep track of what's listed, sold, and still waiting to post on Depop.`;
+  return `Come join my closet "${closetName}" on Mothball! We use it to keep track of what's listed, sold, and still waiting to post.`;
 }
 
 export function inviterFromSearch(search: string) {

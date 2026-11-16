@@ -13,16 +13,21 @@ import {
 import Modal from "./Modal";
 import {
   CONDITION_LABELS,
-  STATUS_LABELS,
+  STATUS_THEME,
+  categoryLabel,
+  STATUS_OPTIONS,
   defaultItemImage,
-  depopDescription,
+  fullDescription as buildDescription,
+  daysListed,
   formatDate,
+  isStale,
   formatPrice,
   photoDownloadUrl,
   photoFileName,
   squareJpgUrl,
   squareUrl,
   type Item,
+  type ItemStatus,
 } from "../lib/closets";
 
 type ItemViewDialogProps = {
@@ -30,23 +35,32 @@ type ItemViewDialogProps = {
   item: Item | null;
   onClose: () => void;
   onEdit: (item: Item) => void;
+  staleDays?: number;
+  onRelist?: (item: Item) => Promise<boolean>;
+  onStatusChange?: (item: Item, status: ItemStatus) => void;
 };
-
-const statusStyles = {
-  TO_UPLOAD: "bg-mist text-plum/80",
-  LISTED: "bg-lilac/20 text-plum",
-  SOLD: "bg-plum text-white",
-} as const;
 
 export default function ItemViewDialog({
   open,
   item,
   onClose,
   onEdit,
+  staleDays,
+  onRelist,
+  onStatusChange,
 }: ItemViewDialogProps): JSX.Element {
   return (
     <Modal open={open} size="lg" title={item?.name ?? ""} onClose={onClose}>
-      {item && <ItemView key={item.id} item={item} onEdit={onEdit} />}
+      {item && (
+        <ItemView
+          key={item.id}
+          item={item}
+          onEdit={onEdit}
+          staleDays={staleDays}
+          onRelist={onRelist}
+          onStatusChange={onStatusChange}
+        />
+      )}
     </Modal>
   );
 }
@@ -86,10 +100,19 @@ function useCopy() {
 function ItemView({
   item,
   onEdit,
+  staleDays,
+  onRelist,
+  onStatusChange,
 }: {
   item: Item;
   onEdit: (item: Item) => void;
+  staleDays?: number;
+  onRelist?: (item: Item) => Promise<boolean>;
+  onStatusChange?: (item: Item, status: ItemStatus) => void;
 }): JSX.Element {
+  const [relisting, setRelisting] = useState(false);
+  const stale = staleDays !== undefined && isStale(item, staleDays);
+  const days = daysListed(item);
   const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [shareFiles, setShareFiles] = useState<File[] | null>(null);
@@ -187,7 +210,7 @@ function ItemView({
     ["Brand", item.brand],
     ["Size", item.size],
     ["Condition", item.condition ? CONDITION_LABELS[item.condition] : null],
-    ["Category", item.category],
+    ["Category", categoryLabel(item)],
     ["Color", item.color],
     ["Belongs to", item.owner?.name],
   ].filter((entry): entry is [string, string] => Boolean(entry[1]));
@@ -198,7 +221,7 @@ function ItemView({
     ["Sold for", item.status === "SOLD" ? item.soldPriceCents : null],
   ].filter((entry): entry is [string, number] => entry[1] != null);
 
-  const fullDescription = depopDescription(item);
+  const fullDescription = buildDescription(item);
 
   return (
     <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:items-start md:gap-6">
@@ -332,19 +355,39 @@ function ItemView({
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status]}`}
+          <div
+            role="radiogroup"
+            aria-label="Status"
+            className="grid w-full grid-cols-3 gap-1 rounded-full bg-mist p-1 sm:w-auto"
           >
-            {STATUS_LABELS[item.status]}
-          </span>
-          {item.depopUrl && (
+            {STATUS_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={item.status === value}
+                disabled={!onStatusChange}
+                onClick={() =>
+                  item.status !== value && onStatusChange?.(item, value)
+                }
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                  item.status === value
+                    ? STATUS_THEME[value].active
+                    : "text-plum/60 hover:bg-white hover:text-plum"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {item.listingUrl && (
             <a
-              href={item.depopUrl}
+              href={item.listingUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-sm font-medium text-lilac hover:underline"
             >
-              Open on Depop
+              Open listing
               <ArrowSquareOutIcon size={14} aria-hidden="true" />
             </a>
           )}
@@ -357,6 +400,24 @@ function ItemView({
             Edit
           </button>
         </div>
+
+        {stale && onRelist && (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-mist px-3 py-2 text-sm text-plum/80">
+            <span>Listed {days} days ago. Might be time to refresh it.</span>
+            <button
+              type="button"
+              disabled={relisting}
+              onClick={async () => {
+                setRelisting(true);
+                await onRelist(item);
+                setRelisting(false);
+              }}
+              className="shrink-0 font-medium text-lilac cursor-pointer hover:underline"
+            >
+              {relisting ? "Saving..." : "Mark relisted"}
+            </button>
+          </div>
+        )}
 
         {prices.length > 0 && (
           <dl className="grid grid-cols-3 gap-2">

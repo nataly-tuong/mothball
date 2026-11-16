@@ -1,7 +1,6 @@
 import type { JSX } from "react";
 import { NavLink } from "react-router-dom";
 import {
-  ArrowsClockwiseIcon,
   BellIcon,
   CoatHangerIcon,
   UserCircleIcon,
@@ -10,7 +9,6 @@ import type { Icon } from "@phosphor-icons/react";
 
 export type MobileNavProps = {
   closetId: number | null;
-  relistCount?: number;
   unread?: number;
 };
 
@@ -58,7 +56,6 @@ function Tab({
 
 export default function MobileNav({
   closetId,
-  relistCount = 0,
   unread = 0,
 }: MobileNavProps): JSX.Element {
   const base = closetId ? `/closet/${closetId}` : "/closet";
@@ -66,15 +63,9 @@ export default function MobileNav({
   return (
     <nav
       aria-label="App"
-      className="mx-2 mb-[max(0.5rem,env(safe-area-inset-bottom))] mt-2 grid grid-cols-4 gap-1 rounded-2xl border border-plum/10 bg-white/95 p-1.5 shadow-xl shadow-plum/25 backdrop-blur sm:hidden"
+      className="mx-2 mb-[max(0.5rem,env(safe-area-inset-bottom))] mt-2 grid grid-cols-3 gap-1 rounded-2xl border border-plum/10 bg-white/95 p-1.5 shadow-xl shadow-plum/25 backdrop-blur sm:hidden"
     >
       <Tab to={base} end label="Closet" Icon={CoatHangerIcon} />
-      <Tab
-        to={closetId ? `${base}/relist` : "/closet"}
-        label="Re-list"
-        Icon={ArrowsClockwiseIcon}
-        badge={relistCount}
-      />
       <Tab
         to={closetId ? `${base}/activity` : "/closet"}
         label="Activity"

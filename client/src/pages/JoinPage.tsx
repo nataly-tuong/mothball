@@ -23,7 +23,7 @@ import { googleSignInUrl } from "../lib/pwa";
 const perks = [
   { Icon: TagIcon, text: "See what's listed, sold, and waiting to post" },
   { Icon: UsersIcon, text: "One shared closet, so nobody lists twice" },
-  { Icon: CameraIcon, text: "Square photos and descriptions ready for Depop" },
+  { Icon: CameraIcon, text: "Square photos and descriptions ready to post" },
 ];
 
 export default function JoinPage(): JSX.Element {
@@ -122,7 +122,7 @@ export default function JoinPage(): JSX.Element {
               !
             </h2>
             <p className="text-sm leading-relaxed text-plum/70">
-              Mothball is a shared closet for selling on Depop together.
+              Mothball is a shared closet for selling together.
             </p>
           </div>
 

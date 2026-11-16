@@ -2,7 +2,7 @@ import type { JSX } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, NavLink, useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowsClockwiseIcon,
+  ClockCounterClockwiseIcon,
   BellIcon,
   CoatHangerIcon,
   MagnifyingGlassIcon,
@@ -11,7 +11,6 @@ import {
   UsersIcon,
 } from "@phosphor-icons/react";
 import ActivityFeed from "../components/ActivityFeed";
-import RelistView from "../components/RelistView";
 import AppShell from "../components/AppShell";
 import ItemDialog from "../components/ItemDialog";
 import ItemViewDialog from "../components/ItemViewDialog";
@@ -20,6 +19,7 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import {
   STATUS_OPTIONS,
+  STATUS_THEME,
   coverImage,
   daysListed,
   formatPrice,
@@ -42,7 +42,7 @@ type Filter = (typeof filters)[number]["value"];
 
 const NEW_CLOSET_OPTION = "new";
 
-export type ClosetView = "items" | "relist" | "activity";
+export type ClosetView = "items" | "activity";
 
 export default function ClosetPageRoute({
   view = "items",
@@ -185,7 +185,7 @@ function ClosetPage({
 
   const visibleItems = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return (items ?? []).filter(
+    const filtered = (items ?? []).filter(
       (item) =>
         (filter === "all" || item.status === filter) &&
         (!query ||
@@ -194,6 +194,7 @@ function ClosetPage({
             item.brand,
             item.size,
             item.category,
+            item.subcategory,
             item.color,
             item.description,
             item.notes,
@@ -202,15 +203,13 @@ function ClosetPage({
             ...item.hashtags,
           ].some((value) => value?.toLowerCase().includes(query))),
     );
-  }, [items, filter, search]);
-
-  const staleCount = useMemo(
-    () =>
-      closet
-        ? (items ?? []).filter((item) => isStale(item, closet.staleDays)).length
-        : 0,
-    [items, closet],
-  );
+    if (!closet) return filtered;
+    const staleDays = closet.staleDays;
+    return [
+      ...filtered.filter((item) => isStale(item, staleDays)),
+      ...filtered.filter((item) => !isStale(item, staleDays)),
+    ];
+  }, [items, filter, search, closet]);
 
   const itemIds = useMemo(
     () => new Set((items ?? []).map((item) => item.id)),
@@ -309,21 +308,6 @@ function ClosetPage({
     return true;
   }
 
-  async function changeStaleDays(days: number) {
-    setActionError("");
-    const result = await api(`/api/closets/${closetId}`, {
-      method: "PATCH",
-      body: { staleDays: days },
-    });
-    if (!result.ok) {
-      setActionError(result.message);
-      return;
-    }
-    setCloset((current) =>
-      current ? { ...current, staleDays: days } : current,
-    );
-  }
-
   function openItemById(itemId: number) {
     const item = items?.find((i) => i.id === itemId);
     if (item) openViewItem(item);
@@ -345,12 +329,22 @@ function ClosetPage({
       aria-pressed={filter === value}
       className={`flex min-w-0 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-medium whitespace-nowrap transition cursor-pointer sm:px-4 sm:py-2 sm:text-sm ${
         filter === value
-          ? "bg-plum text-white shadow-sm hover:bg-plum/85"
+          ? value === "all"
+            ? "bg-plum text-white shadow-sm hover:bg-plum/85"
+            : `${STATUS_THEME[value].active} shadow-sm`
           : "text-plum/80 hover:bg-white sm:border sm:border-lavender-gray sm:hover:border-lilac sm:hover:bg-lavender/50"
       }`}
     >
       <span className="truncate">{label}</span>
-      <span className={filter === value ? "text-white/70" : "text-plum/45"}>
+      <span
+        className={
+          filter === value
+            ? value === "all"
+              ? "text-white/70"
+              : "opacity-60"
+            : "text-plum/45"
+        }
+      >
         {counts[value]}
       </span>
     </button>
@@ -362,7 +356,7 @@ function ClosetPage({
     return (
       <li
         key={item.id}
-        className="group flex flex-col overflow-hidden rounded-xl border border-lavender-gray bg-white shadow-sm shadow-plum/5 transition duration-200 sm:hover:-translate-y-0.5 sm:hover:shadow-md sm:hover:shadow-plum/15"
+        className={`group flex flex-col overflow-hidden rounded-xl border shadow-sm shadow-plum/5 transition duration-200 sm:hover:-translate-y-0.5 sm:hover:shadow-md sm:hover:shadow-plum/15 ${STATUS_THEME[item.status].card}`}
       >
         <div className="relative">
           <button
@@ -378,8 +372,12 @@ function ClosetPage({
               className="aspect-square w-full object-cover"
             />
             {stale && (
-              <span className="absolute left-2 top-2 rounded-full bg-coral px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
-                {days}d · re-list
+              <span
+                title={`Listed ${days} days ago. Consider refreshing it.`}
+                className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-plum shadow-sm"
+              >
+                <ClockCounterClockwiseIcon size={12} aria-hidden="true" />
+                {days}d
               </span>
             )}
             {item.photos.length > 1 && (
@@ -424,7 +422,7 @@ function ClosetPage({
             aria-label={`Status for ${item.name}`}
             value={item.status}
             onChange={(e) => changeStatus(item, e.target.value as ItemStatus)}
-            className="mt-auto w-full cursor-pointer rounded-full border border-lilac/40 bg-lavender/60 px-2.5 py-1 text-xs text-plum transition hover:bg-lavender focus-visible:outline-2 focus-visible:outline-lilac sm:w-auto sm:self-start sm:px-3 sm:text-sm"
+            className={`mt-auto w-full cursor-pointer rounded-full border px-2.5 py-1 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-lilac sm:w-auto sm:self-start sm:px-3 sm:text-sm ${STATUS_THEME[item.status].chip}`}
           >
             {STATUS_OPTIONS.map(({ value, label }) => (
               <option key={value} value={value}>
@@ -447,7 +445,7 @@ function ClosetPage({
   const unread = closet?.unreadActivity ?? 0;
 
   return (
-    <AppShell nav={{ closetId, relistCount: staleCount, unread }}>
+    <AppShell nav={{ closetId, unread }}>
       {!closet ? (
         loadError ? (
           <p role="alert" className="error-box">
@@ -506,15 +504,6 @@ function ClosetPage({
             <NavLink to={`/closet/${closetId}`} end className={tabClass}>
               <CoatHangerIcon size={16} weight="fill" aria-hidden="true" />
               Items
-            </NavLink>
-            <NavLink to={`/closet/${closetId}/relist`} className={tabClass}>
-              <ArrowsClockwiseIcon size={16} weight="bold" aria-hidden="true" />
-              Re-list
-              {staleCount > 0 && (
-                <span className="rounded-full bg-coral px-1.5 text-xs font-bold text-white">
-                  {staleCount}
-                </span>
-              )}
             </NavLink>
             <NavLink to={`/closet/${closetId}/activity`} className={tabClass}>
               <BellIcon size={16} weight="fill" aria-hidden="true" />
@@ -600,21 +589,6 @@ function ClosetPage({
             </>
           )}
 
-          {view === "relist" &&
-            (items === null ? (
-              <p className="muted">Loading items...</p>
-            ) : (
-              <RelistView
-                items={items}
-                staleDays={closet.staleDays}
-                isOwner={closet.role === "OWNER"}
-                onRelist={relistItem}
-                onEdit={(item) => openEditItem(item)}
-                onView={openViewItem}
-                onChangeStaleDays={changeStaleDays}
-              />
-            ))}
-
           {view === "activity" && (
             <ActivityFeed
               closetId={closetId}
@@ -630,6 +604,9 @@ function ClosetPage({
             item={viewingItem}
             onClose={() => setViewOpen(false)}
             onEdit={(item) => openEditItem(item, true)}
+            staleDays={closet.staleDays}
+            onRelist={relistItem}
+            onStatusChange={changeStatus}
           />
 
           <ItemDialog
