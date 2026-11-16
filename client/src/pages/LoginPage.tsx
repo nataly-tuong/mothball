@@ -1,17 +1,64 @@
 import type { SubmitEvent, JSX } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+import { useEffect, useState } from "react";
+import {
+  fetchInvitePreview,
+  getPendingInvite,
+  normalizeInviteCode,
+  setPendingInvite,
+} from "../lib/invites";
 import { useAuth } from "../context/AuthContext";
 import PasswordInput from "../components/PasswordInput";
+
+const GOOGLE_ERRORS: Record<string, string> = {
+  google_cancelled: "Google sign-in was cancelled.",
+  google_unverified: "Your Google email isn't verified yet.",
+  google_unavailable: "Google sign-in isn't available right now.",
+  google_failed: "Google sign-in failed. Please try again.",
+};
+
+function getGoogleError(search: string) {
+  const code = new URLSearchParams(search).get("error");
+  if (!code?.startsWith("google_")) return "";
+  return GOOGLE_ERRORS[code] ?? GOOGLE_ERRORS.google_failed;
+}
 
 export default function LoginPage(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
   const { refreshUser } = useAuth();
 
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => getGoogleError(location.search));
   const [loading, setLoading] = useState(false);
+
+  const [searchParams] = useSearchParams();
+  const [inviteCode] = useState(() => {
+    const fromUrl = normalizeInviteCode(searchParams.get("invite") ?? "");
+    if (fromUrl.length === 8) setPendingInvite(fromUrl);
+    return fromUrl.length === 8 ? fromUrl : getPendingInvite();
+  });
+  const [inviteName, setInviteName] = useState("");
+
+  useEffect(() => {
+    if (!inviteCode) return;
+    let active = true;
+
+    fetchInvitePreview(inviteCode).then((result) => {
+      if (!active) return;
+      if (result.ok) setInviteName(result.data.name);
+      else setPendingInvite(null);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [inviteCode]);
 
   const notice =
     typeof location.state?.message === "string" ? location.state.message : "";
@@ -75,6 +122,15 @@ export default function LoginPage(): JSX.Element {
       {notice && (
         <p role="status" className="text-sm leading-snug text-plum/70">
           {notice}
+        </p>
+      )}
+
+      {inviteName && (
+        <p
+          role="status"
+          className="rounded-lg bg-lavender px-3 py-2 text-sm leading-snug text-plum"
+        >
+          Log in to join <strong>{inviteName}</strong>.
         </p>
       )}
 
@@ -142,7 +198,11 @@ export default function LoginPage(): JSX.Element {
         <div className="divider-line" />
       </div>
 
-      <button type="button" className="btn-secondary">
+      <button
+        type="button"
+        className="btn-secondary"
+        onClick={() => window.location.assign("/api/auth/google")}
+      >
         <FcGoogle className="h-5 w-5" />
         Continue with Google
       </button>

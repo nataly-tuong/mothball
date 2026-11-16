@@ -10,6 +10,14 @@ type EmailOptions = {
   footer: string;
 };
 
+function escapeAttr(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 export function emailLayout({
   preheader,
   tagline,
@@ -48,6 +56,23 @@ export function emailLayout({
                         <td align="center" style="padding:16px 28px 16px 38px;font-family:'Courier New',Courier,monospace;font-size:36px;line-height:1;font-weight:700;letter-spacing:10px;color:#39245f;">${code}</td>
                       </tr>
                     </table>`
+                        : ""
+                    }
+                    ${
+                      button
+                        ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;border-collapse:separate;">
+                      <tr>
+                        <td align="center" bgcolor="#39245f" style="border-radius:999px;background-color:#39245f;">
+                          <a href="${escapeAttr(button.url)}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:'Hanken Grotesk',Arial,sans-serif;font-size:16px;font-weight:600;line-height:1;color:#ffffff;text-decoration:none;border-radius:999px;">${button.label}</a>
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin:16px 0 0;font-size:12px;line-height:1.6;color:#39245f;">Button not working? Copy this link:<br /><a href="${escapeAttr(button.url)}" target="_blank" style="color:#a984e8;word-break:break-all;">${escapeAttr(button.url)}</a></p>`
+                        : ""
+                    }
+                    ${
+                      note
+                        ? `<p style="margin:${button || code ? "16px" : "12px"} 0 0;font-size:13px;line-height:1.6;color:#39245f;opacity:0.75;">${note}</p>`
                         : ""
                     }
                   </td>

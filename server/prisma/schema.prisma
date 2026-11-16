@@ -30,5 +30,96 @@ model User {
   tokenVersion Int      @default(0)
   createdAt    DateTime @default(now())
 
+  memberships ClosetMember[]
+  items       Item[]         @relation("ItemCreatedBy")
+  ownedItems  Item[]         @relation("ItemOwner")
+
   @@index([emailVerified, createdAt])
+}
+
+enum ClosetRole {
+  OWNER
+  MEMBER
+}
+
+enum ItemStatus {
+  TO_UPLOAD
+  LISTED
+  SOLD
+}
+
+enum ItemCondition {
+  BRAND_NEW
+  LIKE_NEW
+  EXCELLENT
+  GOOD
+  FAIR
+}
+
+model Closet {
+  id         Int      @id @default(autoincrement())
+  name       String
+  inviteCode String   @unique
+  createdAt  DateTime @default(now())
+
+  members ClosetMember[]
+  items   Item[]
+}
+
+model ClosetMember {
+  closetId Int
+  userId   Int
+  role     ClosetRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
+
+  closet Closet @relation(fields: [closetId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([closetId, userId])
+  @@index([userId])
+}
+
+model Item {
+  id             Int            @id @default(autoincrement())
+  closetId       Int
+  createdById    Int?
+  ownerId        Int?
+  name           String
+  description    String?
+  hashtags       String[]       @default([])
+  brand          String?
+  size           String?
+  condition      ItemCondition?
+  category       String?
+  color          String?
+  status         ItemStatus     @default(TO_UPLOAD)
+  priceCents     Int?
+  minPriceCents  Int?
+  soldPriceCents Int?
+  depopUrl       String?
+  notes          String?
+  listedAt       DateTime?
+  soldAt         DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  closet    Closet      @relation(fields: [closetId], references: [id], onDelete: Cascade)
+  createdBy User?       @relation("ItemCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  owner     User?       @relation("ItemOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  photos    ItemPhoto[]
+
+  @@index([closetId, createdAt])
+}
+
+model ItemPhoto {
+  id        Int      @id @default(autoincrement())
+  itemId    Int
+  url       String
+  publicId  String   @unique
+  position  Int
+  createdAt DateTime @default(now())
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId, position])
 }

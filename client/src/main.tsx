@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { setupPwa } from "./lib/pwa";
 
 import "./index.css";
 import App from "./App";
@@ -16,10 +17,11 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
 import ClosetPage from "./pages/ClosetPage";
+import ClosetHomePage from "./pages/ClosetHomePage";
+import SettingsPage from "./pages/SettingsPage";
+import JoinPage from "./pages/JoinPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
-
-import { SampleListings } from "./components/SampleListings";
 
 const router = createBrowserRouter([
   { path: "/", element: <App /> },
@@ -27,10 +29,10 @@ const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      {
-        path: "/closet",
-        element: <ClosetPage sampleListing={SampleListings} />,
-      },
+      { path: "/closet", element: <ClosetHomePage /> },
+      { path: "/closet/new", element: <ClosetHomePage onboarding /> },
+      { path: "/closet/:closetId", element: <ClosetPage /> },
+      { path: "/settings", element: <SettingsPage /> },
     ],
   },
   {
@@ -41,10 +43,13 @@ const router = createBrowserRouter([
       { path: "/forgot-password", element: <ForgotPasswordPage /> },
       { path: "/verify-email", element: <VerifyEmailPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
+      { path: "/join/:code", element: <JoinPage /> },
     ],
   },
   { path: "*", element: <NotFoundPage /> },
 ]);
+
+setupPwa();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

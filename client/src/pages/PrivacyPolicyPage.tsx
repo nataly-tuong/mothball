@@ -116,6 +116,7 @@ export default function PrivacyPolicyPage(): JSX.Element {
             Vercel, which hosts the website and passes requests to our server.
           </li>
           <li>Google, for sign-in and for sending our emails.</li>
+          <li>Cloudinary, which stores the photos you add to items.</li>
           <li>
             Have I Been Pwned, which checks whether a password has appeared in a
             known breach. We send only a small part of a hashed password, so the
@@ -146,14 +147,12 @@ export default function PrivacyPolicyPage(): JSX.Element {
       <Section title="Your choices">
         <ul className={list}>
           <li>
-            <li>
-              <strong>Delete your account</strong> any time in Settings. This
-              removes your account and personal data from our database.
-            </li>
-            <li>
-              Deleted data is removed right away, though short-term database
-              history can keep a copy for up to about 6 hours.
-            </li>
+            <strong>Delete your account</strong> any time in Settings. This
+            removes your account and personal data from our database.
+          </li>
+          <li>
+            Deleted data is removed right away, though short-term database
+            history can keep a copy for up to about 6 hours.
           </li>
           <li>
             Email us at{" "}

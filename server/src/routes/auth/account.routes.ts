@@ -11,6 +11,7 @@ import {
 } from "../../lib/tokens.js";
 import { deleteCodeHtml } from "../../emails/deleteCode.js";
 import { accountDeletedHtml } from "../../emails/accountDeleted.js";
+import { removeUserFromAllClosets } from "../../lib/closets.js";
 
 const router = Router();
 
@@ -86,6 +87,7 @@ router.delete(
         return invalid();
       }
 
+      await removeUserFromAllClosets(user.id);
       await prisma.user.delete({ where: { id: user.id } });
 
       res.clearCookie("token", {

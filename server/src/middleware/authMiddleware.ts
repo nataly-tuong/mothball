@@ -10,15 +10,11 @@ declare global {
   }
 }
 
-export default async function authMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  const token = req.cookies.token;
+export async function getSessionUserId(req: Request): Promise<number | null> {
+  const token = req.cookies?.token;
 
-  if (!token) {
-    return res.status(401).json({ message: "Not authenticated" });
+  if (typeof token !== "string" || !token) {
+    return null;
   }
 
   try {
@@ -29,7 +25,7 @@ export default async function authMiddleware(
     const userId = decoded.userId;
 
     if (typeof userId !== "number") {
-      return res.status(401).json({ message: "Invalid or expired token" });
+      return null;
     }
 
     const user = await prisma.user.findUnique({
@@ -38,14 +34,32 @@ export default async function authMiddleware(
     });
 
     if (!user || decoded.tokenVersion !== user.tokenVersion) {
-      return res
-        .status(401)
-        .json({ message: "Session expired. Please log in again." });
+      return null;
     }
 
-    req.userId = userId;
-    next();
+    return userId;
   } catch {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    return null;
   }
+}
+
+export default async function authMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  if (!req.cookies?.token) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const userId = await getSessionUserId(req);
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ message: "Session expired. Please log in again." });
+  }
+
+  req.userId = userId;
+  next();
 }

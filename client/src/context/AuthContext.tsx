@@ -7,10 +7,12 @@ import {
 } from "react";
 
 type User = {
-  id: string;
+  id: number;
   email: string;
   name: string;
   emailVerified: boolean;
+  hasPassword: boolean;
+  hasGoogle: boolean;
 };
 
 type AuthContextType = {

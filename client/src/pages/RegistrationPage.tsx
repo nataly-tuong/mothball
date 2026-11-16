@@ -1,9 +1,15 @@
 import type { SubmitEvent, JSX } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import PasswordInput from "../components/PasswordInput";
+import {
+  fetchInvitePreview,
+  getPendingInvite,
+  normalizeInviteCode,
+  setPendingInvite,
+} from "../lib/invites";
 
 const NAME_MIN = 2;
 const NAME_MAX = 20;
@@ -27,6 +33,48 @@ function getNameError(name: string): string {
 export default function RegistrationPage(): JSX.Element {
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  const [inviteCode, setInviteCode] = useState(() =>
+    normalizeInviteCode(searchParams.get("invite") ?? getPendingInvite() ?? ""),
+  );
+  const [inviteName, setInviteName] = useState("");
+  const [inviteError, setInviteError] = useState("");
+
+  useEffect(() => {
+    if (inviteCode.length !== 8) return;
+    let active = true;
+
+    fetchInvitePreview(inviteCode).then((result) => {
+      if (!active) return;
+      if (result.ok) {
+        setInviteName(result.data.name);
+        setInviteError("");
+      } else {
+        setInviteName("");
+        setInviteError(result.message);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [inviteCode]);
+
+  function rememberInvite() {
+    setPendingInvite(
+      inviteCode.length === 8 && !inviteError ? inviteCode : null,
+    );
+  }
+
+  function handleInviteChange(value: string) {
+    const code = normalizeInviteCode(value).slice(0, 8);
+    setInviteCode(code);
+    if (code.length !== 8) {
+      setInviteName("");
+      setInviteError("");
+    }
+  }
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -114,6 +162,13 @@ export default function RegistrationPage(): JSX.Element {
       setError("Passwords don't match");
       return;
     }
+
+    if (inviteCode && inviteCode.length !== 8) {
+      setError("Invite codes are 8 characters, or leave it blank");
+      return;
+    }
+
+    rememberInvite();
 
     setLoading(true);
     try {
@@ -256,6 +311,41 @@ export default function RegistrationPage(): JSX.Element {
         />
       </div>
 
+      <div className="field">
+        <label htmlFor="inviteCode" className="field-label">
+          Invite code{" "}
+          <span className="font-normal text-plum/50">(optional)</span>
+        </label>
+        <input
+          id="inviteCode"
+          name="inviteCode"
+          type="text"
+          placeholder="ABCD-1234"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={9}
+          value={
+            inviteCode.length > 4
+              ? `${inviteCode.slice(0, 4)}-${inviteCode.slice(4)}`
+              : inviteCode
+          }
+          onChange={(e) => handleInviteChange(e.target.value)}
+          aria-invalid={inviteError !== ""}
+          aria-describedby="invite-help"
+          className="input font-semibold uppercase tracking-[0.2em]"
+        />
+        <p
+          id="invite-help"
+          className={`text-xs ${inviteError ? "text-coral" : "text-plum/60"}`}
+        >
+          {inviteError ||
+            (inviteName
+              ? `You'll join ${inviteName} after you verify your email.`
+              : "Got a code from a friend? Add it to join their closet.")}
+        </p>
+      </div>
+
       {visibleError && (
         <p role="alert" className="error-box">
           {visibleError}
@@ -285,7 +375,14 @@ export default function RegistrationPage(): JSX.Element {
         <div className="divider-line" />
       </div>
 
-      <button type="button" className="btn-secondary">
+      <button
+        type="button"
+        className="btn-secondary"
+        onClick={() => {
+          rememberInvite();
+          window.location.assign("/api/auth/google");
+        }}
+      >
         <FcGoogle className="h-5 w-5" />
         Continue with Google
       </button>

@@ -2,8 +2,9 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import prisma from "../../prismaClient.js";
 import authMiddleware from "../../middleware/authMiddleware.js";
-import { loginLimiter } from "../../middleware/rateLimiters.js";
+import { accountLimiter, loginLimiter } from "../../middleware/rateLimiters.js";
 import { issueAuthCookie } from "../../lib/authCookie.js";
+import { getNameError } from "../../lib/validation.js";
 
 import {
   verifyPassword,
@@ -17,19 +18,55 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, email: true, name: true, emailVerified: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        emailVerified: true,
+        passwordHash: true,
+        googleId: true,
+        createdAt: true,
+      },
     });
 
     if (!user) {
       return res.sendStatus(404);
     }
 
-    res.status(200).send(user);
+    const { passwordHash, googleId, ...profile } = user;
+
+    res.status(200).send({
+      ...profile,
+      hasPassword: passwordHash !== null,
+      hasGoogle: googleId !== null,
+    });
   } catch (error) {
     console.error("Failed to fetch user:", error);
     return res.sendStatus(500);
   }
 });
+
+router.patch(
+  "/me",
+  authMiddleware,
+  accountLimiter,
+  async (req: Request, res: Response) => {
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    const nameError = getNameError(name);
+
+    if (nameError) {
+      return res.status(400).send({ message: nameError });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: { name },
+      select: { name: true },
+    });
+
+    res.send(user);
+  },
+);
 
 router.post("/login", loginLimiter, async (req: Request, res: Response) => {
   const { email, password, remember } = req.body;
@@ -66,7 +103,7 @@ router.post("/login", loginLimiter, async (req: Request, res: Response) => {
       return;
     }
 
-    if (needsRehash(user.passwordHash)) {
+    if (user.passwordHash && needsRehash(user.passwordHash)) {
       await prisma.user.update({
         where: { id: user.id },
         data: { passwordHash: await hashPassword(password) },

@@ -25,6 +25,32 @@ export const loginLimiter = limiter(
   "Too many login attempts. Please try again later.",
 );
 
+export const googleLimiter = limiter(
+  15 * MIN,
+  30,
+  "Too many sign-in attempts. Please try again later.",
+);
+
+export const closetJoinLimiter = limiter(
+  15 * MIN,
+  10,
+  "Too many attempts. Please try again later.",
+  (req) => String(req.userId ?? "unknown"),
+);
+
+export const inviteLookupLimiter = limiter(
+  15 * MIN,
+  60,
+  "Too many attempts. Please try again later.",
+);
+
+export const closetWriteLimiter = limiter(
+  15 * MIN,
+  300,
+  "You're doing that a lot. Please slow down.",
+  (req) => String(req.userId ?? "unknown"),
+);
+
 export const registerLimiter = limiter(
   15 * MIN,
   5,

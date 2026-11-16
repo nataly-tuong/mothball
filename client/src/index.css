@@ -78,4 +78,33 @@ body {
   .link {
     @apply font-medium text-lilac hover:underline;
   }
+
+  .btn-small-primary,
+  .btn-small-secondary,
+  .btn-small-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition duration-200 cursor-pointer;
+    @apply active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac;
+    @apply disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100;
+  }
+  .btn-small-primary {
+    @apply border border-plum bg-linear-to-b from-plum/80 to-plum text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25;
+    @apply hover:brightness-110 hover:shadow-lg hover:shadow-plum/25;
+  }
+  .btn-small-secondary {
+    @apply border border-plum/40 bg-linear-to-b from-white to-lavender/60 text-plum shadow-sm shadow-plum/10 ring-1 ring-inset ring-white;
+    @apply hover:border-plum/60 hover:to-lavender;
+  }
+  .btn-small-danger {
+    @apply border border-coral bg-coral text-white shadow-md shadow-coral/20;
+    @apply hover:brightness-105;
+  }
+  .card {
+    @apply rounded-xl border border-lavender-gray bg-white p-6 shadow-sm shadow-plum/5;
+  }
+  .card-heading {
+    @apply font-fredoka text-xl font-medium text-plum;
+  }
+  .muted {
+    @apply text-sm text-plum/70;
+  }
 }

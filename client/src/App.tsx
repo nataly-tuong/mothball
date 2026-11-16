@@ -44,8 +44,6 @@ const primaryButton = `${pillBase} border border-plum bg-linear-to-b from-plum/8
 
 const secondaryButton = `${pillBase} border border-plum/60 bg-linear-to-b from-white to-lavender/60 px-7 py-3 text-base text-plum shadow-lg shadow-plum/10 ring-1 ring-inset ring-white hover:border-plum hover:to-lavender hover:shadow-xl hover:shadow-plum/20`;
 
-const navButton = `${pillBase} border border-plum bg-linear-to-b from-plum/80 to-plum px-4 py-2 text-sm text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 hover:brightness-110`;
-
 function ClosetPreview(): JSX.Element {
   return (
     <div

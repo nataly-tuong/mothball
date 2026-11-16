@@ -24,6 +24,8 @@ import {
 
 const router = Router();
 
+const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
+
 router.post(
   "/forgot-password",
   forgotPasswordLimiter,
@@ -50,7 +52,7 @@ router.post(
           data: { resetToken: hashed, resetTokenExpiry: expiry },
         });
 
-        const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${raw}`;
+        const resetUrl = `${frontendUrl}/reset-password?token=${raw}`;
 
         void sendMail(
           user.email,
@@ -139,7 +141,7 @@ router.post(
         await sendMail(
           user.email,
           "Your Mothball password was changed",
-          passwordChangedHtml(`${process.env.FRONTEND_URL}/forgot-password`),
+          passwordChangedHtml(`${frontendUrl}/forgot-password`),
         );
       } catch (emailError) {
         console.error("Password changed email failed:", emailError);
