@@ -18,6 +18,7 @@ import ItemViewDialog from "../components/ItemViewDialog";
 import ManageClosetDialog from "../components/ManageClosetDialog";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
+import { celebrate, shouldCelebrate } from "../lib/celebrate";
 import {
   STATUS_OPTIONS,
   STATUS_THEME,
@@ -248,6 +249,10 @@ function ClosetPage({
   }
 
   function handleSaved(saved: Item) {
+    const previous = items?.find((i) => i.id === saved.id);
+    if (previous) maybeCelebrate(previous.status, saved.status);
+    else if (saved.status !== "TO_UPLOAD")
+      maybeCelebrate("TO_UPLOAD", saved.status);
     setItems((current) => {
       const list = current ?? [];
       return list.some((i) => i.id === saved.id)
@@ -266,8 +271,15 @@ function ClosetPage({
     setViewingId(null);
   }
 
+  function maybeCelebrate(from: ItemStatus, to: ItemStatus) {
+    if (user?.confetti !== false && shouldCelebrate(from, to)) {
+      void celebrate(to);
+    }
+  }
+
   async function changeStatus(item: Item, status: ItemStatus) {
     setActionError("");
+    maybeCelebrate(item.status, status);
     setItems((current) =>
       (current ?? []).map((i) => (i.id === item.id ? { ...i, status } : i)),
     );

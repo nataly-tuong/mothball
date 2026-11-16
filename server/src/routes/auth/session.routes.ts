@@ -25,6 +25,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
         emailVerified: true,
         passwordHash: true,
         googleId: true,
+        confetti: true,
         createdAt: true,
       },
     });
@@ -51,17 +52,33 @@ router.patch(
   authMiddleware,
   accountLimiter,
   async (req: Request, res: Response) => {
-    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
-    const nameError = getNameError(name);
+    const data: { name?: string; confetti?: boolean } = {};
 
-    if (nameError) {
-      return res.status(400).send({ message: nameError });
+    if (req.body?.name !== undefined) {
+      const name =
+        typeof req.body.name === "string" ? req.body.name.trim() : "";
+      const nameError = getNameError(name);
+      if (nameError) {
+        return res.status(400).send({ message: nameError });
+      }
+      data.name = name;
+    }
+
+    if (req.body?.confetti !== undefined) {
+      if (typeof req.body.confetti !== "boolean") {
+        return res.status(400).send({ message: "Invalid setting." });
+      }
+      data.confetti = req.body.confetti;
+    }
+
+    if (data.name === undefined && data.confetti === undefined) {
+      return res.status(400).send({ message: "Nothing to update." });
     }
 
     const user = await prisma.user.update({
       where: { id: req.userId },
-      data: { name },
-      select: { name: true },
+      data,
+      select: { name: true, confetti: true },
     });
 
     res.send(user);

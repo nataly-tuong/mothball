@@ -14,6 +14,7 @@ type User = {
   emailVerified: boolean;
   hasPassword: boolean;
   hasGoogle: boolean;
+  confetti: boolean;
 };
 
 type AuthContextType = {

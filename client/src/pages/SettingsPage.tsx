@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import { setLastClosetId, type ClosetSummary } from "../lib/closets";
 import { openInstallGuide } from "../lib/pwa";
+import { celebrate } from "../lib/celebrate";
 
 const CODE_LENGTH = 6;
 
@@ -32,6 +33,7 @@ export default function SettingsPage(): JSX.Element {
   const [googleError, setGoogleError] = useState("");
   const [unlinking, setUnlinking] = useState(false);
   const [signingOutAll, setSigningOutAll] = useState(false);
+  const [savingConfetti, setSavingConfetti] = useState(false);
 
   const [nameError, setNameError] = useState("");
   const [nameSaved, setNameSaved] = useState(false);
@@ -56,6 +58,21 @@ export default function SettingsPage(): JSX.Element {
     const result = await api<ClosetSummary[]>("/api/closets");
     if (result.ok) setClosets(result.data);
     else setClosetError(result.message);
+  }
+
+  async function toggleConfetti() {
+    if (!user) return;
+    const next = !user.confetti;
+    setSavingConfetti(true);
+    const result = await api("/api/auth/me", {
+      method: "PATCH",
+      body: { confetti: next },
+    });
+    setSavingConfetti(false);
+    if (result.ok) {
+      await refreshUser();
+      if (next) void celebrate("LISTED");
+    }
   }
 
   async function signOutEverywhere() {
@@ -332,6 +349,37 @@ export default function SettingsPage(): JSX.Element {
               {signingOutAll ? "Signing out..." : "Sign out of all devices"}
             </button>
           </div>
+        </section>
+
+        <section
+          className="card flex items-center justify-between gap-4"
+          aria-labelledby="confetti-heading"
+        >
+          <div className="flex flex-col gap-1">
+            <h3 id="confetti-heading" className="card-heading">
+              Celebrations
+            </h3>
+            <p className="muted">
+              Confetti when something gets listed or sold.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={user.confetti}
+            aria-labelledby="confetti-heading"
+            onClick={toggleConfetti}
+            disabled={savingConfetti}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition cursor-pointer disabled:opacity-60 ${
+              user.confetti ? "bg-plum" : "bg-lavender-gray"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                user.confetti ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
         </section>
 
         <section
