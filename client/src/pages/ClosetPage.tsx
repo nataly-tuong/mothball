@@ -7,7 +7,6 @@ import {
   CoatHangerIcon,
   MagnifyingGlassIcon,
   PencilSimpleIcon,
-  PushPinIcon,
   PlusIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
@@ -392,20 +391,6 @@ function ClosetPage({
               >
                 <ClockCounterClockwiseIcon size={12} aria-hidden="true" />
                 {days}d
-              </span>
-            )}
-            {item.notes && (
-              <span
-                title="Has a note"
-                className="absolute bottom-2 right-2 grid h-6 w-6 place-items-center rounded-full bg-amber-100 text-amber-600 shadow-sm"
-              >
-                <PushPinIcon
-                  size={13}
-                  weight="fill"
-                  className="-rotate-12"
-                  aria-hidden="true"
-                />
-                <span className="sr-only">Has a note</span>
               </span>
             )}
             {item.photos.length > 1 && (
