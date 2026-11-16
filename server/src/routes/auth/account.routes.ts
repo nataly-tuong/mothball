@@ -9,7 +9,7 @@ import {
   createVerificationCode,
   hashVerificationCode,
 } from "../../lib/tokens.js";
-import { deleteCodeHtml } from "../../emails/deleteCode.js";
+import { deleteCodeHtml, deleteCodeSubject } from "../../emails/deleteCode.js";
 import { accountDeletedHtml } from "../../emails/accountDeleted.js";
 import { removeUserFromAllClosets } from "../../lib/closets.js";
 
@@ -37,7 +37,7 @@ router.post(
 
       void sendMail(
         user.email,
-        "Confirm deleting your Mothball account",
+        deleteCodeSubject(code),
         deleteCodeHtml(code),
       ).catch((err) => console.error("Delete code email failed:", err));
 

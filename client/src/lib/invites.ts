@@ -5,6 +5,7 @@ const PENDING_INVITE_KEY = "mothball:pendingInvite";
 export type InvitePreview = {
   name: string;
   memberCount: number;
+  itemCount: number;
   inviteCode: string;
 };
 
@@ -12,8 +13,23 @@ export function normalizeInviteCode(input: string) {
   return input.toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
-export function inviteLink(code: string) {
-  return `${window.location.origin}/join/${code}`;
+export function inviteLink(code: string, from?: string) {
+  const url = new URL(`/join/${code}`, window.location.origin);
+  if (from) url.searchParams.set("from", from);
+  return url.toString();
+}
+
+export function inviteMessage(closetName: string) {
+  return `Come join my closet "${closetName}" on Mothball! We use it to keep track of what's listed, sold, and still waiting to post on Depop.`;
+}
+
+export function inviterFromSearch(search: string) {
+  const name = new URLSearchParams(search).get("from") ?? "";
+  const clean = name
+    .replace(/[^\p{L}\p{N} ]/gu, "")
+    .trim()
+    .slice(0, 20);
+  return clean || null;
 }
 
 export function getPendingInvite(): string | null {

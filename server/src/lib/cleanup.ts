@@ -1,4 +1,5 @@
 import prisma from "../prismaClient.js";
+import { pruneOldActivity } from "./activity.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UNVERIFIED_MAX_AGE_MS = 7 * DAY_MS;
@@ -28,7 +29,14 @@ export async function deleteStaleUnverifiedUsers() {
   }
 }
 
+async function runCleanup() {
+  await deleteStaleUnverifiedUsers();
+  await pruneOldActivity().catch((err) =>
+    console.error("Activity cleanup failed:", err),
+  );
+}
+
 export function startCleanupJobs() {
-  void deleteStaleUnverifiedUsers();
-  setInterval(() => void deleteStaleUnverifiedUsers(), RUN_EVERY_MS).unref();
+  void runCleanup();
+  setInterval(() => void runCleanup(), RUN_EVERY_MS).unref();
 }

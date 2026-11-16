@@ -23,3 +23,8 @@ function resolveFrontendUrl() {
 
 export const frontendUrl = resolveFrontendUrl();
 export { isProduction };
+
+export function verifyLink(email: string, code: string) {
+  const params = new URLSearchParams({ email, code });
+  return `${frontendUrl}/verify-email?${params.toString()}`;
+}

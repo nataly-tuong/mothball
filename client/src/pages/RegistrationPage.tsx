@@ -11,6 +11,7 @@ import {
   setPendingInvite,
 } from "../lib/invites";
 import { apiFetch } from "../lib/api";
+import { googleSignInUrl } from "../lib/pwa";
 
 const NAME_MIN = 2;
 const NAME_MAX = 20;
@@ -381,7 +382,7 @@ export default function RegistrationPage(): JSX.Element {
         className="btn-secondary"
         onClick={() => {
           rememberInvite();
-          window.location.assign("/api/auth/google");
+          window.location.assign(googleSignInUrl());
         }}
       >
         <FcGoogle className="h-5 w-5" />

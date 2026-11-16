@@ -31,6 +31,7 @@ export default function SettingsPage(): JSX.Element {
   const googleLinked = searchParams.get("google") === "linked";
   const [googleError, setGoogleError] = useState("");
   const [unlinking, setUnlinking] = useState(false);
+  const [signingOutAll, setSigningOutAll] = useState(false);
 
   const [nameError, setNameError] = useState("");
   const [nameSaved, setNameSaved] = useState(false);
@@ -55,6 +56,23 @@ export default function SettingsPage(): JSX.Element {
     const result = await api<ClosetSummary[]>("/api/closets");
     if (result.ok) setClosets(result.data);
     else setClosetError(result.message);
+  }
+
+  async function signOutEverywhere() {
+    setSigningOutAll(true);
+    const result = await api("/api/auth/logout-all", { method: "POST" });
+    setSigningOutAll(false);
+
+    if (!result.ok) {
+      setGoogleError(result.message);
+      return;
+    }
+
+    await refreshUser();
+    navigate("/login", {
+      replace: true,
+      state: { message: "You've been signed out on every device." },
+    });
   }
 
   async function unlinkGoogle() {
@@ -301,6 +319,19 @@ export default function SettingsPage(): JSX.Element {
           <p className="text-xs text-plum/60">
             Password changes go through a reset link sent to your email.
           </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-lavender-gray pt-4">
+            <p className="muted">
+              Lost a phone or used a shared computer? Sign out everywhere.
+            </p>
+            <button
+              type="button"
+              onClick={signOutEverywhere}
+              disabled={signingOutAll}
+              className="btn-small-secondary"
+            >
+              {signingOutAll ? "Signing out..." : "Sign out of all devices"}
+            </button>
+          </div>
         </section>
 
         <section

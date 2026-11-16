@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import PasswordInput from "../components/PasswordInput";
 import { apiFetch } from "../lib/api";
+import { googleSignInUrl, isStandalone } from "../lib/pwa";
 
 const GOOGLE_ERRORS: Record<string, string> = {
   google_cancelled: "Google sign-in was cancelled.",
@@ -39,6 +40,7 @@ export default function LoginPage(): JSX.Element {
   const [loading, setLoading] = useState(false);
 
   const [searchParams] = useSearchParams();
+  const [inApp] = useState(isStandalone);
   const [inviteCode] = useState(() => {
     const fromUrl = normalizeInviteCode(searchParams.get("invite") ?? "");
     if (fromUrl.length === 8) setPendingInvite(fromUrl);
@@ -82,6 +84,7 @@ export default function LoginPage(): JSX.Element {
           email,
           password,
           remember: form.get("remember") === "on",
+          app: isStandalone(),
         }),
       });
 
@@ -104,7 +107,14 @@ export default function LoginPage(): JSX.Element {
       }
 
       await refreshUser();
-      navigate("/closet");
+      navigate(
+        typeof location.state?.from === "string" &&
+          location.state.from.startsWith("/") &&
+          !location.state.from.startsWith("//")
+          ? location.state.from
+          : "/closet",
+        { replace: true },
+      );
     } catch {
       setError("Can't reach the server. Please try again.");
     } finally {
@@ -166,18 +176,24 @@ export default function LoginPage(): JSX.Element {
       </div>
 
       <div className="flex items-center justify-between">
-        <label
-          htmlFor="remember"
-          className="flex cursor-pointer items-center gap-2 text-sm text-plum"
-        >
-          <input
-            id="remember"
-            name="remember"
-            type="checkbox"
-            className="h-4 w-4 cursor-pointer accent-plum"
-          />
-          Remember me
-        </label>
+        {inApp ? (
+          <span className="text-sm text-plum/60">
+            You'll stay logged in on this app.
+          </span>
+        ) : (
+          <label
+            htmlFor="remember"
+            className="flex cursor-pointer items-center gap-2 text-sm text-plum"
+          >
+            <input
+              id="remember"
+              name="remember"
+              type="checkbox"
+              className="h-4 w-4 cursor-pointer accent-plum"
+            />
+            Remember me
+          </label>
+        )}
         <Link to="/forgot-password" className="link text-sm">
           Forgot password?
         </Link>
@@ -202,7 +218,7 @@ export default function LoginPage(): JSX.Element {
       <button
         type="button"
         className="btn-secondary"
-        onClick={() => window.location.assign("/api/auth/google")}
+        onClick={() => window.location.assign(googleSignInUrl())}
       >
         <FcGoogle className="h-5 w-5" />
         Continue with Google

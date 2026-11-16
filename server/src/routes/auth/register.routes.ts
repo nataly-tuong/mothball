@@ -2,7 +2,8 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import prisma from "../../prismaClient.js";
 import { sendMail } from "../../lib/mailer.js";
-import { welcomeEmailHtml } from "../../emails/welcome.js";
+import { verificationSubject, welcomeEmailHtml } from "../../emails/welcome.js";
+import { verifyLink } from "../../lib/config.js";
 import { registerLimiter } from "../../middleware/rateLimiters.js";
 import { getPasswordError } from "../../lib/passwordRules.js";
 import { getNameError, getEmailError } from "../../lib/validation.js";
@@ -87,8 +88,8 @@ router.post(
       try {
         await sendMail(
           user.email,
-          "Your Mothball verification code",
-          welcomeEmailHtml(code),
+          verificationSubject(code),
+          welcomeEmailHtml(code, verifyLink(user.email, code)),
         );
       } catch (error) {
         console.error("Verification email failed to send:", error);

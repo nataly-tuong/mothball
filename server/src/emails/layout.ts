@@ -51,7 +51,8 @@ export function emailLayout({
                                       <p style="margin:0 0 ${button ? "24px" : code ? "20px" : "0"};font-size:16px;line-height:1.7;color:#29233a;">${body}</p>
                     ${
                       code
-                        ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;border-collapse:separate;background-color:#fffefc;border:1px solid #d9d0e5;border-radius:16px;">
+                        ? `<p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#39245f;">Your code</p>
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;border-collapse:separate;background-color:#fffefc;border:1px solid #d9d0e5;border-radius:16px;">
                       <tr>
                         <td align="center" style="padding:16px 28px 16px 38px;font-family:'Courier New',Courier,monospace;font-size:36px;line-height:1;font-weight:700;letter-spacing:10px;color:#39245f;">${code}</td>
                       </tr>
@@ -60,7 +61,7 @@ export function emailLayout({
                     }
                     ${
                       button
-                        ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;border-collapse:separate;">
+                        ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:${code ? "20px" : "0"} auto 0;border-collapse:separate;">
                       <tr>
                         <td align="center" bgcolor="#39245f" style="border-radius:999px;background-color:#39245f;">
                           <a href="${escapeAttr(button.url)}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:'Hanken Grotesk',Arial,sans-serif;font-size:16px;font-weight:600;line-height:1;color:#ffffff;text-decoration:none;border-radius:999px;">${button.label}</a>

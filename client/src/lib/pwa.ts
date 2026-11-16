@@ -103,3 +103,7 @@ export function onOpenInstallGuide(handler: () => void) {
   window.addEventListener(OPEN_EVENT, handler);
   return () => window.removeEventListener(OPEN_EVENT, handler);
 }
+
+export function googleSignInUrl() {
+  return isStandalone() ? "/api/auth/google?app=1" : "/api/auth/google";
+}

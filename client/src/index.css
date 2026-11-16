@@ -17,6 +17,14 @@
 
 body {
   font-family: "Hanken Grotesk", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
 }
 
 @layer components {

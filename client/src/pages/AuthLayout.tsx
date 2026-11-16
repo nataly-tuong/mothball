@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import type { CSSProperties, JSX } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import MothballSVG from "../assets/favicon.svg";
 import BgImage from "../assets/dddepth-061.jpg";
@@ -14,7 +14,10 @@ export default function AuthLayout(): JSX.Element {
   const tint = tints[pathname] ?? "bg-lavender/60";
 
   return (
-    <main className="flex min-h-dvh">
+    <main
+      className={`flex h-dvh overflow-hidden ${tint} bg-(image:--auth-bg) bg-cover bg-center bg-blend-overlay md:bg-none md:bg-white`}
+      style={{ "--auth-bg": `url(${BgImage})` } as CSSProperties}
+    >
       <div
         className={`relative hidden md:flex flex-1 m-4 py-10 rounded-2xl flex-col items-center justify-center border border-plum/15 ring-1 ring-inset ring-white/50 shadow-lg shadow-plum/10 ${tint} bg-blend-overlay bg-cover bg-center transition-colors duration-700 ease-in-out`}
         style={{ backgroundImage: `url(${BgImage})` }}
@@ -33,14 +36,19 @@ export default function AuthLayout(): JSX.Element {
         </p>
       </div>
 
-      <div className="flex flex-col bg-white flex-1 px-6 py-10 sm:px-10 gap-6 items-center justify-center">
-        <Link to="/" className="flex items-center gap-2 self-center md:hidden">
-          <img src={MothballSVG} className="w-9" alt="" />
-          <span className="font-gaegu text-5xl font-extrabold text-plum">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center-safe gap-5 overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-10 md:bg-white md:py-10">
+        <Link
+          to="/"
+          className="flex flex-col items-center gap-1 self-center md:hidden"
+        >
+          <img src={MothballSVG} className="w-16" alt="" />
+          <span className="font-gaegu text-5xl font-extrabold leading-none text-plum">
             Mothball
           </span>
         </Link>
-        <Outlet />
+        <div className="flex w-full max-w-md flex-col items-center rounded-3xl border border-plum/10 bg-white px-5 py-7 shadow-xl shadow-plum/15 sm:px-8 md:max-w-none md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+          <Outlet />
+        </div>
       </div>
     </main>
   );

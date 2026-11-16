@@ -6,7 +6,7 @@ export default function NotFoundPage(): JSX.Element {
   return (
     <main>
       <div
-        className="flex flex-1 flex-col text-center items-center justify-center min-h-screen bg-lavender/60 bg-blend-overlay bg-cover bg-center"
+        className="flex flex-1 flex-col text-center items-center justify-center h-dvh overflow-hidden px-6 bg-lavender/60 bg-blend-overlay bg-cover bg-center"
         style={{ backgroundImage: `url(${BgImage})` }}
       >
         <h1 className="text-6xl font-fredoka font-bold text-plum">404</h1>

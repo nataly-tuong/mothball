@@ -1,8 +1,14 @@
-import { useEffect, useState, type JSX } from "react";
+import { useEffect, useRef, useState, type JSX } from "react";
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../lib/api";
+import { isStandalone } from "../lib/pwa";
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
@@ -11,15 +17,26 @@ export default function VerifyEmail(): JSX.Element {
   const { user, loading, refreshUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const linkEmail = searchParams.get("email") ?? "";
+  const linkCode = /^\d{6}$/.test(searchParams.get("code") ?? "")
+    ? (searchParams.get("code") as string)
+    : "";
 
   const knownEmail =
-    typeof location.state?.email === "string" ? location.state.email : "";
+    typeof location.state?.email === "string"
+      ? location.state.email
+      : linkEmail;
 
   const [email, setEmail] = useState(knownEmail);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(linkEmail ? linkCode : "");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(() =>
+    Boolean(linkEmail && linkCode),
+  );
+  const linkAttempted = useRef(false);
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
@@ -27,6 +44,37 @@ export default function VerifyEmail(): JSX.Element {
       navigate("/closet", { replace: true });
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (!linkEmail || !linkCode || linkAttempted.current) return;
+    linkAttempted.current = true;
+    window.history.replaceState(window.history.state, "", "/verify-email");
+
+    apiFetch("/api/auth/verify-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: linkEmail,
+        code: linkCode,
+        app: isStandalone(),
+      }),
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          await refreshUser();
+          navigate("/closet", { replace: true });
+          return;
+        }
+        const data = await res.json().catch(() => null);
+        setError(
+          data?.message ??
+            "That link didn't work. Enter the code or request a new one.",
+        );
+        setCode("");
+      })
+      .catch(() => setError("Can't reach the server. Please try again."))
+      .finally(() => setSubmitting(false));
+  }, [linkEmail, linkCode, refreshUser, navigate]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -51,7 +99,7 @@ export default function VerifyEmail(): JSX.Element {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, code: value }),
+        body: JSON.stringify({ email, code: value, app: isStandalone() }),
       });
       const data = await res.json().catch(() => null);
 

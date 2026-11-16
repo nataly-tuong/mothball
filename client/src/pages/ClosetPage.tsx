@@ -1,13 +1,17 @@
 import type { JSX } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, NavLink, useNavigate, useParams } from "react-router-dom";
 import {
+  ArrowsClockwiseIcon,
+  BellIcon,
   CoatHangerIcon,
   MagnifyingGlassIcon,
   PencilSimpleIcon,
   PlusIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
+import ActivityFeed from "../components/ActivityFeed";
+import RelistView from "../components/RelistView";
 import AppShell from "../components/AppShell";
 import ItemDialog from "../components/ItemDialog";
 import ItemViewDialog from "../components/ItemViewDialog";
@@ -17,7 +21,9 @@ import { api } from "../lib/api";
 import {
   STATUS_OPTIONS,
   coverImage,
+  daysListed,
   formatPrice,
+  isStale,
   setLastClosetId,
   type ClosetDetail,
   type ClosetSummary,
@@ -36,7 +42,13 @@ type Filter = (typeof filters)[number]["value"];
 
 const NEW_CLOSET_OPTION = "new";
 
-export default function ClosetPageRoute(): JSX.Element {
+export type ClosetView = "items" | "relist" | "activity";
+
+export default function ClosetPageRoute({
+  view = "items",
+}: {
+  view?: ClosetView;
+}): JSX.Element {
   const { closetId: closetParam } = useParams();
   const closetId = Number(closetParam);
 
@@ -44,10 +56,16 @@ export default function ClosetPageRoute(): JSX.Element {
     return <Navigate to="/closet" replace />;
   }
 
-  return <ClosetPage key={closetId} closetId={closetId} />;
+  return <ClosetPage key={closetId} closetId={closetId} view={view} />;
 }
 
-function ClosetPage({ closetId }: { closetId: number }): JSX.Element {
+function ClosetPage({
+  closetId,
+  view,
+}: {
+  closetId: number;
+  view: ClosetView;
+}): JSX.Element {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -101,6 +119,12 @@ function ClosetPage({ closetId }: { closetId: number }): JSX.Element {
     void fetchCloset().then(applyCloset);
   }, [fetchCloset, applyCloset]);
 
+  const markActivitySeen = useCallback(() => {
+    setCloset((current) =>
+      current ? { ...current, unreadActivity: 0 } : current,
+    );
+  }, []);
+
   useEffect(() => {
     let active = true;
 
@@ -120,6 +144,28 @@ function ClosetPage({ closetId }: { closetId: number }): JSX.Element {
 
     return () => {
       active = false;
+    };
+  }, [closetId, fetchCloset, applyCloset]);
+
+  useEffect(() => {
+    let lastRefresh = Date.now();
+
+    function refresh() {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastRefresh < 15_000) return;
+      lastRefresh = Date.now();
+
+      void fetchCloset().then(applyCloset);
+      api<Item[]>(`/api/closets/${closetId}/items`).then((result) => {
+        if (result.ok) setItems(result.data);
+      });
+    }
+
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
     };
   }, [closetId, fetchCloset, applyCloset]);
 
@@ -157,6 +203,19 @@ function ClosetPage({ closetId }: { closetId: number }): JSX.Element {
           ].some((value) => value?.toLowerCase().includes(query))),
     );
   }, [items, filter, search]);
+
+  const staleCount = useMemo(
+    () =>
+      closet
+        ? (items ?? []).filter((item) => isStale(item, closet.staleDays)).length
+        : 0,
+    [items, closet],
+  );
+
+  const itemIds = useMemo(
+    () => new Set((items ?? []).map((item) => item.id)),
+    [items],
+  );
 
   if (notFound) {
     return <Navigate to="/closet" replace />;
@@ -230,6 +289,46 @@ function ClosetPage({ closetId }: { closetId: number }): JSX.Element {
     );
   }
 
+  function replaceItem(updated: Item) {
+    setItems((current) =>
+      (current ?? []).map((i) => (i.id === updated.id ? updated : i)),
+    );
+  }
+
+  async function relistItem(item: Item) {
+    setActionError("");
+    const result = await api<Item>(
+      `/api/closets/${closetId}/items/${item.id}/relist`,
+      { method: "POST" },
+    );
+    if (!result.ok) {
+      setActionError(result.message);
+      return false;
+    }
+    replaceItem(result.data);
+    return true;
+  }
+
+  async function changeStaleDays(days: number) {
+    setActionError("");
+    const result = await api(`/api/closets/${closetId}`, {
+      method: "PATCH",
+      body: { staleDays: days },
+    });
+    if (!result.ok) {
+      setActionError(result.message);
+      return;
+    }
+    setCloset((current) =>
+      current ? { ...current, staleDays: days } : current,
+    );
+  }
+
+  function openItemById(itemId: number) {
+    const item = items?.find((i) => i.id === itemId);
+    if (item) openViewItem(item);
+  }
+
   function handleSwitch(value: string) {
     if (value === NEW_CLOSET_OPTION) {
       navigate("/closet/new");
@@ -244,94 +343,111 @@ function ClosetPage({ closetId }: { closetId: number }): JSX.Element {
       key={value}
       onClick={() => setFilter(value)}
       aria-pressed={filter === value}
-      className={`rounded-full px-4 py-2 whitespace-nowrap cursor-pointer  ${
+      className={`flex min-w-0 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-medium whitespace-nowrap transition cursor-pointer sm:px-4 sm:py-2 sm:text-sm ${
         filter === value
-          ? "bg-plum text-white hover:bg-plum/85"
-          : "border border-lavender-gray text-ink hover:bg-lavender/50 hover:border-lilac hover:text-plum"
+          ? "bg-plum text-white shadow-sm hover:bg-plum/85"
+          : "text-plum/80 hover:bg-white sm:border sm:border-lavender-gray sm:hover:border-lilac sm:hover:bg-lavender/50"
       }`}
     >
-      {label}
-      <span className={filter === value ? "text-white/70" : "text-plum/50"}>
-        {" "}
+      <span className="truncate">{label}</span>
+      <span className={filter === value ? "text-white/70" : "text-plum/45"}>
         {counts[value]}
       </span>
     </button>
   ));
 
-  const cardElements = visibleItems.map((item) => (
-    <li
-      key={item.id}
-      className="group flex flex-col overflow-hidden rounded-xl border border-lavender-gray bg-white shadow-sm shadow-plum/5 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-plum/15"
-    >
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => openViewItem(item)}
-          className="block w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lilac"
-          aria-label={`View ${item.name}`}
-        >
-          <img
-            src={coverImage(item)}
-            alt=""
-            loading="lazy"
-            className="aspect-square w-full object-cover"
-          />
-          {item.photos.length > 1 && (
-            <span className="absolute bottom-2 left-2 rounded-full bg-plum/80 px-2 py-0.5 text-xs font-medium text-white">
-              {item.photos.length} photos
-            </span>
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => openEditItem(item)}
-          aria-label={`Edit ${item.name}`}
-          title="Edit"
-          className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-plum shadow-sm transition cursor-pointer hover:bg-white sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-        >
-          <PencilSimpleIcon size={16} aria-hidden="true" />
-        </button>
-      </div>
-      <div className="flex flex-1 flex-col gap-1 p-4">
-        <button
-          type="button"
-          onClick={() => openViewItem(item)}
-          tabIndex={-1}
-          className="flex items-start justify-between gap-2 text-left cursor-pointer"
-        >
-          <h3 className="font-bold text-plum leading-snug hover:underline">
-            {item.name}
-          </h3>
-          {item.priceCents !== null && (
-            <span className="shrink-0 font-semibold text-plum">
-              {formatPrice(item.priceCents)}
-            </span>
-          )}
-        </button>
-        <p className="mb-3 text-xs text-plum/60">
-          {[item.brand, item.size].filter(Boolean).join(" · ") ||
-            (item.createdBy
-              ? `Added by ${item.createdBy.name}`
-              : "Added by a former member")}
-        </p>
-        <select
-          aria-label={`Status for ${item.name}`}
-          value={item.status}
-          onChange={(e) => changeStatus(item, e.target.value as ItemStatus)}
-          className="mt-auto self-start cursor-pointer rounded-full border border-lilac/40 bg-lavender/60 px-3 py-1 text-sm text-plum transition hover:bg-lavender focus-visible:outline-2 focus-visible:outline-lilac"
-        >
-          {STATUS_OPTIONS.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
-    </li>
-  ));
+  const cardElements = visibleItems.map((item) => {
+    const stale = closet ? isStale(item, closet.staleDays) : false;
+    const days = daysListed(item);
+    return (
+      <li
+        key={item.id}
+        className="group flex flex-col overflow-hidden rounded-xl border border-lavender-gray bg-white shadow-sm shadow-plum/5 transition duration-200 sm:hover:-translate-y-0.5 sm:hover:shadow-md sm:hover:shadow-plum/15"
+      >
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => openViewItem(item)}
+            className="block w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lilac"
+            aria-label={`View ${item.name}`}
+          >
+            <img
+              src={coverImage(item)}
+              alt=""
+              loading="lazy"
+              className="aspect-square w-full object-cover"
+            />
+            {stale && (
+              <span className="absolute left-2 top-2 rounded-full bg-coral px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                {days}d · re-list
+              </span>
+            )}
+            {item.photos.length > 1 && (
+              <span className="absolute bottom-2 left-2 rounded-full bg-plum/80 px-2 py-0.5 text-[11px] font-medium text-white">
+                {item.photos.length} photos
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => openEditItem(item)}
+            aria-label={`Edit ${item.name}`}
+            title="Edit"
+            className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-plum shadow-sm transition cursor-pointer hover:bg-white sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+          >
+            <PencilSimpleIcon size={16} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="flex flex-1 flex-col gap-1 p-2.5 sm:p-4">
+          <button
+            type="button"
+            onClick={() => openViewItem(item)}
+            tabIndex={-1}
+            className="flex flex-col items-start gap-0.5 text-left cursor-pointer sm:flex-row sm:justify-between sm:gap-2"
+          >
+            <h3 className="line-clamp-2 text-sm font-bold leading-snug text-plum hover:underline sm:text-base">
+              {item.name}
+            </h3>
+            {item.priceCents !== null && (
+              <span className="shrink-0 text-sm font-semibold text-plum sm:text-base">
+                {formatPrice(item.priceCents)}
+              </span>
+            )}
+          </button>
+          <p className="mb-2 truncate text-xs text-plum/60 sm:mb-3">
+            {[item.brand, item.size].filter(Boolean).join(" · ") ||
+              (item.createdBy
+                ? `Added by ${item.createdBy.name}`
+                : "Added by a former member")}
+          </p>
+          <select
+            aria-label={`Status for ${item.name}`}
+            value={item.status}
+            onChange={(e) => changeStatus(item, e.target.value as ItemStatus)}
+            className="mt-auto w-full cursor-pointer rounded-full border border-lilac/40 bg-lavender/60 px-2.5 py-1 text-xs text-plum transition hover:bg-lavender focus-visible:outline-2 focus-visible:outline-lilac sm:w-auto sm:self-start sm:px-3 sm:text-sm"
+          >
+            {STATUS_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </li>
+    );
+  });
+
+  const tabClass = ({ isActive }: { isActive: boolean }) =>
+    `inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+      isActive
+        ? "bg-plum text-white shadow-sm"
+        : "text-plum/70 hover:bg-lavender hover:text-plum"
+    }`;
+
+  const unread = closet?.unreadActivity ?? 0;
 
   return (
-    <AppShell>
+    <AppShell nav={{ closetId, relistCount: staleCount, unread }}>
       {!closet ? (
         loadError ? (
           <p role="alert" className="error-box">
@@ -342,15 +458,17 @@ function ClosetPage({ closetId }: { closetId: number }): JSX.Element {
         )
       ) : (
         <>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-plum text-4xl font-bold">{closet.name}</h2>
-              <div className="flex flex-wrap items-center gap-3 text-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-1.5 sm:gap-2">
+              <h2 className="truncate text-2xl font-bold text-plum sm:text-4xl">
+                {closet.name}
+              </h2>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
                 <select
                   aria-label="Switch closet"
                   value={closet.id}
                   onChange={(e) => handleSwitch(e.target.value)}
-                  className="cursor-pointer rounded-full border border-lavender-gray bg-white px-3 py-1 text-plum transition hover:border-lilac focus-visible:outline-2 focus-visible:outline-lilac"
+                  className="max-w-44 cursor-pointer truncate rounded-full border border-lavender-gray bg-white px-3 py-1 text-plum transition hover:border-lilac focus-visible:outline-2 focus-visible:outline-lilac"
                 >
                   {closets.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -367,39 +485,47 @@ function ClosetPage({ closetId }: { closetId: number }): JSX.Element {
                   className="inline-flex items-center gap-1.5 text-plum/70 cursor-pointer hover:text-plum"
                 >
                   <UsersIcon size={18} aria-hidden="true" />
-                  {closet.members.length}{" "}
-                  {closet.members.length === 1 ? "member" : "members"} · Invite
+                  {closet.members.length} · Invite
                 </button>
               </div>
             </div>
             <button
               type="button"
               onClick={openNewItem}
-              className="inline-flex items-center gap-2 rounded-full border border-plum bg-linear-to-b from-plum/80 to-plum px-5 py-2 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac"
+              className="hidden shrink-0 items-center gap-2 rounded-full border border-plum bg-linear-to-b from-plum/80 to-plum px-5 py-2 text-sm font-medium text-white shadow-md shadow-plum/20 ring-1 ring-inset ring-white/25 transition duration-200 cursor-pointer hover:brightness-110 hover:shadow-lg hover:shadow-plum/25 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac sm:inline-flex"
             >
               <PlusIcon size={16} weight="bold" aria-hidden="true" />
               New listing
             </button>
           </div>
 
-          <div className="flex flex-wrap justify-between gap-3">
-            <div className="relative min-w-60 flex-1">
-              <MagnifyingGlassIcon
-                size={22}
-                className="text-plum absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                aria-hidden="true"
-              />
-              <input
-                aria-label="Search items"
-                type="search"
-                placeholder="Search items"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-md border border-lavender-gray pl-11 py-2 bg-white placeholder:text-gray-400"
-              />
-            </div>
-            <div className="flex gap-2 overflow-x-auto">{filterElements}</div>
-          </div>
+          <nav
+            aria-label="Closet sections"
+            className="hidden gap-1 self-start rounded-full bg-mist p-1 sm:flex"
+          >
+            <NavLink to={`/closet/${closetId}`} end className={tabClass}>
+              <CoatHangerIcon size={16} weight="fill" aria-hidden="true" />
+              Items
+            </NavLink>
+            <NavLink to={`/closet/${closetId}/relist`} className={tabClass}>
+              <ArrowsClockwiseIcon size={16} weight="bold" aria-hidden="true" />
+              Re-list
+              {staleCount > 0 && (
+                <span className="rounded-full bg-coral px-1.5 text-xs font-bold text-white">
+                  {staleCount}
+                </span>
+              )}
+            </NavLink>
+            <NavLink to={`/closet/${closetId}/activity`} className={tabClass}>
+              <BellIcon size={16} weight="fill" aria-hidden="true" />
+              Activity
+              {unread > 0 && (
+                <span className="rounded-full bg-coral px-1.5 text-xs font-bold text-white">
+                  {unread}
+                </span>
+              )}
+            </NavLink>
+          </nav>
 
           {actionError && (
             <p role="alert" className="error-box">
@@ -407,37 +533,96 @@ function ClosetPage({ closetId }: { closetId: number }): JSX.Element {
             </p>
           )}
 
-          {items === null ? (
-            <p className="muted">Loading items...</p>
-          ) : items.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <CoatHangerIcon
-                size={56}
-                weight="fill"
-                className="text-lilac"
-                aria-hidden="true"
-              />
-              <p className="font-fredoka text-2xl font-medium text-plum">
-                Nothing in the closet yet
-              </p>
-              <p className="muted">
-                Add your first item, or invite people to start sharing.
-              </p>
+          {view === "items" && (
+            <>
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                <div className="relative sm:min-w-60 sm:flex-1">
+                  <MagnifyingGlassIcon
+                    size={20}
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-plum"
+                    aria-hidden="true"
+                  />
+                  <input
+                    aria-label="Search items"
+                    type="search"
+                    placeholder="Search title, brand, size, #tag"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full rounded-full border border-lavender-gray bg-white py-2 pl-10 pr-4 text-base placeholder:text-plum/40 focus:border-lilac focus:outline-none focus:ring-2 focus:ring-lilac/40 sm:text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-4 gap-1 rounded-full bg-lavender/70 p-1 sm:flex sm:gap-2 sm:bg-transparent sm:p-0">
+                  {filterElements}
+                </div>
+              </div>
+
+              {items === null ? (
+                <p className="muted">Loading items...</p>
+              ) : items.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-16 text-center">
+                  <CoatHangerIcon
+                    size={56}
+                    weight="fill"
+                    className="text-lilac"
+                    aria-hidden="true"
+                  />
+                  <p className="font-fredoka text-2xl font-medium text-plum">
+                    Nothing in the closet yet
+                  </p>
+                  <p className="muted">
+                    Add your first item, or invite people to start sharing.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={openNewItem}
+                    className="btn-small-primary mt-2"
+                  >
+                    <PlusIcon size={16} weight="bold" aria-hidden="true" />
+                    Add an item
+                  </button>
+                </div>
+              ) : visibleItems.length === 0 ? (
+                <p className="muted py-10 text-center">No items match.</p>
+              ) : (
+                <ul className="grid grid-cols-2 gap-3 pb-20 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] sm:gap-4 sm:pb-0">
+                  {cardElements}
+                </ul>
+              )}
+
               <button
                 type="button"
                 onClick={openNewItem}
-                className="btn-small-primary mt-2"
+                aria-label="New listing"
+                className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] right-5 z-20 grid h-14 w-14 place-items-center rounded-full bg-linear-to-b from-plum/85 to-plum text-white shadow-xl shadow-plum/40 ring-1 ring-inset ring-white/25 transition active:scale-90 sm:hidden"
               >
-                <PlusIcon size={16} weight="bold" aria-hidden="true" />
-                Add an item
+                <PlusIcon size={26} weight="bold" aria-hidden="true" />
               </button>
-            </div>
-          ) : visibleItems.length === 0 ? (
-            <p className="muted py-10 text-center">No items match.</p>
-          ) : (
-            <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
-              {cardElements}
-            </ul>
+            </>
+          )}
+
+          {view === "relist" &&
+            (items === null ? (
+              <p className="muted">Loading items...</p>
+            ) : (
+              <RelistView
+                items={items}
+                staleDays={closet.staleDays}
+                isOwner={closet.role === "OWNER"}
+                onRelist={relistItem}
+                onEdit={(item) => openEditItem(item)}
+                onView={openViewItem}
+                onChangeStaleDays={changeStaleDays}
+              />
+            ))}
+
+          {view === "activity" && (
+            <ActivityFeed
+              closetId={closetId}
+              currentUserId={user?.id}
+              itemExists={(id) => itemIds.has(id)}
+              onOpenItem={openItemById}
+              onSeen={markActivitySeen}
+            />
           )}
 
           <ItemViewDialog

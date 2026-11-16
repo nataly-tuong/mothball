@@ -91,7 +91,7 @@ export default function App(): JSX.Element {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-mist text-plum">
+    <div className="min-h-dvh bg-mist text-plum">
       <div className="relative">
         <nav
           aria-label="Main"

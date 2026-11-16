@@ -33,6 +33,7 @@ model User {
   memberships ClosetMember[]
   items       Item[]         @relation("ItemCreatedBy")
   ownedItems  Item[]         @relation("ItemOwner")
+  activities  Activity[]
 
   @@index([emailVerified, createdAt])
 }
@@ -48,6 +49,21 @@ enum ItemStatus {
   SOLD
 }
 
+enum ActivityType {
+  CLOSET_CREATED
+  CLOSET_RENAMED
+  MEMBER_JOINED
+  MEMBER_LEFT
+  MEMBER_REMOVED
+  ITEM_ADDED
+  ITEM_LISTED
+  ITEM_SOLD
+  ITEM_UNLISTED
+  ITEM_PRICE_CHANGED
+  ITEM_RELISTED
+  ITEM_DELETED
+}
+
 enum ItemCondition {
   BRAND_NEW
   LIKE_NEW
@@ -60,10 +76,12 @@ model Closet {
   id         Int      @id @default(autoincrement())
   name       String
   inviteCode String   @unique
+  staleDays  Int      @default(30)
   createdAt  DateTime @default(now())
 
   members ClosetMember[]
-  items   Item[]
+  items      Item[]
+  activities Activity[]
 }
 
 model ClosetMember {
@@ -71,6 +89,7 @@ model ClosetMember {
   userId   Int
   role     ClosetRole @default(MEMBER)
   joinedAt DateTime   @default(now())
+  seenAt   DateTime   @default(now())
 
   closet Closet @relation(fields: [closetId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -99,6 +118,7 @@ model Item {
   depopUrl       String?
   notes          String?
   listedAt       DateTime?
+  refreshedAt    DateTime?
   soldAt         DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -122,4 +142,19 @@ model ItemPhoto {
   item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@index([itemId, position])
+}
+model Activity {
+  id        Int          @id @default(autoincrement())
+  closetId  Int
+  actorId   Int?
+  type      ActivityType
+  itemId    Int?
+  itemName  String?
+  detail    String?
+  createdAt DateTime     @default(now())
+
+  closet Closet @relation(fields: [closetId], references: [id], onDelete: Cascade)
+  actor  User?  @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([closetId, createdAt])
 }

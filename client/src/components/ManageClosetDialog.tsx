@@ -5,12 +5,13 @@ import {
   CopyIcon,
   CrownSimpleIcon,
   LinkIcon,
+  ShareNetworkIcon,
   UserMinusIcon,
 } from "@phosphor-icons/react";
 import Modal from "./Modal";
 import { api } from "../lib/api";
 import { formatInviteCode, type ClosetDetail } from "../lib/closets";
-import { inviteLink } from "../lib/invites";
+import { inviteLink, inviteMessage } from "../lib/invites";
 
 type ManageClosetDialogProps = {
   open: boolean;
@@ -45,11 +46,26 @@ function ManageClosetContent({
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<number | null>(null);
 
+  const myName = closet.members.find((m) => m.id === currentUserId)?.name;
+  const link = inviteLink(closet.inviteCode, myName);
+  const canShare = typeof navigator.share === "function";
+
+  async function shareInvite() {
+    setError("");
+    try {
+      await navigator.share({
+        title: `Join ${closet.name} on Mothball`,
+        text: inviteMessage(closet.name),
+        url: link,
+      });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      void copy("link");
+    }
+  }
+
   async function copy(kind: "code" | "link") {
-    const text =
-      kind === "link"
-        ? inviteLink(closet.inviteCode)
-        : formatInviteCode(closet.inviteCode);
+    const text = kind === "link" ? link : formatInviteCode(closet.inviteCode);
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
@@ -161,10 +177,20 @@ function ManageClosetContent({
           <code className="rounded-lg bg-lavender px-4 py-2 font-semibold tracking-[0.2em] text-plum select-all">
             {formatInviteCode(closet.inviteCode)}
           </code>
+          {canShare && (
+            <button
+              type="button"
+              onClick={shareInvite}
+              className="btn-small-primary"
+            >
+              <ShareNetworkIcon size={16} aria-hidden="true" />
+              Share invite
+            </button>
+          )}
           <button
             type="button"
             onClick={() => copy("link")}
-            className="btn-small-primary"
+            className={canShare ? "btn-small-secondary" : "btn-small-primary"}
           >
             {copied === "link" ? (
               <CheckIcon size={16} weight="bold" aria-hidden="true" />

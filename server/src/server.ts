@@ -15,6 +15,12 @@ if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET is not set");
 }
 
+if (process.env.JWT_SECRET.length < 32) {
+  console.warn(
+    "JWT_SECRET is shorter than 32 characters. Generate a longer random secret.",
+  );
+}
+
 const allowedOrigins = new Set([frontendUrl]);
 
 if (isProduction) {

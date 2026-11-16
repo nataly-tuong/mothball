@@ -1,6 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../prismaClient.js";
+import {
+  isSessionKind,
+  issueAuthCookie,
+  shouldRenewSession,
+  type SessionKind,
+} from "../lib/authCookie.js";
 
 declare global {
   namespace Express {
@@ -10,7 +16,18 @@ declare global {
   }
 }
 
+type Session = {
+  userId: number;
+  tokenVersion: number;
+  kind: SessionKind;
+  issuedAt: number;
+};
+
 export async function getSessionUserId(req: Request): Promise<number | null> {
+  return (await getSession(req))?.userId ?? null;
+}
+
+export async function getSession(req: Request): Promise<Session | null> {
   const token = req.cookies?.token;
 
   if (typeof token !== "string" || !token) {
@@ -37,7 +54,12 @@ export async function getSessionUserId(req: Request): Promise<number | null> {
       return null;
     }
 
-    return userId;
+    return {
+      userId,
+      tokenVersion: user.tokenVersion,
+      kind: isSessionKind(decoded.kind) ? decoded.kind : "short",
+      issuedAt: typeof decoded.iat === "number" ? decoded.iat : 0,
+    };
   } catch {
     return null;
   }
@@ -52,14 +74,22 @@ export default async function authMiddleware(
     return res.status(401).json({ message: "Not authenticated" });
   }
 
-  const userId = await getSessionUserId(req);
+  const session = await getSession(req);
 
-  if (!userId) {
+  if (!session) {
     return res
       .status(401)
       .json({ message: "Session expired. Please log in again." });
   }
 
-  req.userId = userId;
+  if (shouldRenewSession(session.kind, session.issuedAt)) {
+    issueAuthCookie(
+      res,
+      { id: session.userId, tokenVersion: session.tokenVersion },
+      session.kind,
+    );
+  }
+
+  req.userId = session.userId;
   next();
 }

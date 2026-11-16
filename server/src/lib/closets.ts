@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import prisma from "../prismaClient.js";
 import { deleteImages } from "./cloudinary.js";
+import { logActivity } from "./activity.js";
 
 const INVITE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const INVITE_LENGTH = 8;
@@ -43,6 +44,11 @@ export async function removeMember(closetId: number, userId: number) {
       where: { closetId_userId: { closetId, userId } },
     });
 
+    await tx.item.updateMany({
+      where: { closetId, ownerId: userId },
+      data: { ownerId: null },
+    });
+
     const next = await tx.closetMember.findFirst({
       where: { closetId },
       orderBy: { joinedAt: "asc" },
@@ -73,10 +79,16 @@ export async function removeMember(closetId: number, userId: number) {
 export async function removeUserFromAllClosets(userId: number) {
   const memberships = await prisma.closetMember.findMany({
     where: { userId },
-    select: { closetId: true },
+    select: {
+      closetId: true,
+      closet: { select: { _count: { select: { members: true } } } },
+    },
   });
 
-  for (const { closetId } of memberships) {
+  for (const { closetId, closet } of memberships) {
+    if (closet._count.members > 1) {
+      await logActivity({ closetId, actorId: userId, type: "MEMBER_LEFT" });
+    }
     await removeMember(closetId, userId);
   }
 }

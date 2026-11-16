@@ -27,6 +27,8 @@ export type ClosetDetail = {
   id: number;
   name: string;
   inviteCode: string;
+  staleDays: number;
+  unreadActivity: number;
   role: ClosetRole;
   members: ClosetMember[];
 };
@@ -56,6 +58,7 @@ export type Item = {
   depopUrl: string | null;
   notes: string | null;
   listedAt: string | null;
+  refreshedAt: string | null;
   soldAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -124,7 +127,7 @@ export function formatPrice(cents: number | null) {
 }
 
 export function parsePrice(input: string): number | null | undefined {
-  const value = input.trim().replace(/^\$/, "");
+  const value = input.trim().replace(/^\$/, "").replace(/,/g, "");
   if (!value) return null;
   if (!/^\d{1,6}(\.\d{1,2})?$/.test(value)) return undefined;
   return Math.round(Number(value) * 100);
@@ -222,4 +225,53 @@ export function setLastClosetId(id: number | null) {
   } catch {
     return;
   }
+}
+
+export type ActivityType =
+  | "CLOSET_CREATED"
+  | "CLOSET_RENAMED"
+  | "MEMBER_JOINED"
+  | "MEMBER_LEFT"
+  | "MEMBER_REMOVED"
+  | "ITEM_ADDED"
+  | "ITEM_LISTED"
+  | "ITEM_SOLD"
+  | "ITEM_UNLISTED"
+  | "ITEM_PRICE_CHANGED"
+  | "ITEM_RELISTED"
+  | "ITEM_DELETED";
+
+export type Activity = {
+  id: number;
+  type: ActivityType;
+  itemId: number | null;
+  itemName: string | null;
+  detail: string | null;
+  createdAt: string;
+  actor: Person | null;
+};
+
+export const STALE_DAY_OPTIONS = [14, 21, 30, 45, 60, 90];
+export const DUE_SOON_DAYS = 7;
+
+const DAY_MS = 86_400_000;
+
+export function listedSince(item: Item) {
+  return item.refreshedAt ?? item.listedAt;
+}
+
+export function daysListed(item: Item, now = Date.now()) {
+  const since = listedSince(item);
+  if (item.status !== "LISTED" || !since) return null;
+  return Math.floor((now - new Date(since).getTime()) / DAY_MS);
+}
+
+export function isStale(item: Item, staleDays: number, now = Date.now()) {
+  const days = daysListed(item, now);
+  return days !== null && days >= staleDays;
+}
+
+export function isDueSoon(item: Item, staleDays: number, now = Date.now()) {
+  const days = daysListed(item, now);
+  return days !== null && days < staleDays && days >= staleDays - DUE_SOON_DAYS;
 }

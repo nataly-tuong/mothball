@@ -117,7 +117,7 @@ export default function ClosetHomePage({
 
   if (usingInvite) {
     return (
-      <AppShell>
+      <AppShell showNav={false}>
         <p className="muted">Joining your invited closet...</p>
       </AppShell>
     );
@@ -130,7 +130,7 @@ export default function ClosetHomePage({
   }
 
   return (
-    <AppShell>
+    <AppShell showNav={false}>
       {closets === null && !loadError ? (
         <p className="muted">Loading your closets...</p>
       ) : (

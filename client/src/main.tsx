@@ -32,7 +32,15 @@ const router = createBrowserRouter([
     children: [
       { path: "/closet", element: <ClosetHomePage /> },
       { path: "/closet/new", element: <ClosetHomePage onboarding /> },
-      { path: "/closet/:closetId", element: <ClosetPage /> },
+      { path: "/closet/:closetId", element: <ClosetPage view="items" /> },
+      {
+        path: "/closet/:closetId/relist",
+        element: <ClosetPage view="relist" />,
+      },
+      {
+        path: "/closet/:closetId/activity",
+        element: <ClosetPage view="activity" />,
+      },
       { path: "/settings", element: <SettingsPage /> },
     ],
   },

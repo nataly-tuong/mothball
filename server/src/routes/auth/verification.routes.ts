@@ -3,7 +3,8 @@ import type { Request, Response } from "express";
 import crypto from "crypto";
 import prisma from "../../prismaClient.js";
 import { sendMail } from "../../lib/mailer.js";
-import { welcomeEmailHtml } from "../../emails/welcome.js";
+import { verificationSubject, welcomeEmailHtml } from "../../emails/welcome.js";
+import { verifyLink } from "../../lib/config.js";
 import {
   verifyEmailLimiter,
   verifyCodeLimiter,
@@ -23,7 +24,7 @@ router.post(
   verifyEmailLimiter,
   verifyCodeLimiter,
   async (req: Request, res: Response) => {
-    const { email, code } = req.body;
+    const { email, code, app } = req.body;
 
     if (
       typeof email !== "string" ||
@@ -72,7 +73,7 @@ router.post(
         },
       });
 
-      issueAuthCookie(res, user, true);
+      issueAuthCookie(res, user, app === true ? "app" : "long");
 
       res.status(200).send({ message: "Email verified successfully!" });
     } catch (err) {
@@ -118,8 +119,8 @@ router.post(
 
       void sendMail(
         user.email,
-        "Your Mothball verification code",
-        welcomeEmailHtml(code),
+        verificationSubject(code),
+        welcomeEmailHtml(code, verifyLink(user.email, code)),
       ).catch((err) => console.error("Verification email failed:", err));
 
       res.status(200).send(genericReply);

@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 import prisma from "../../prismaClient.js";
 import authMiddleware from "../../middleware/authMiddleware.js";
 import { accountLimiter, loginLimiter } from "../../middleware/rateLimiters.js";
-import { issueAuthCookie } from "../../lib/authCookie.js";
+import { issueAuthCookie, sessionKindFrom } from "../../lib/authCookie.js";
 import { getNameError } from "../../lib/validation.js";
 
 import {
@@ -69,7 +69,7 @@ router.patch(
 );
 
 router.post("/login", loginLimiter, async (req: Request, res: Response) => {
-  const { email, password, remember } = req.body;
+  const { email, password, remember, app } = req.body;
 
   if (
     typeof email !== "string" ||
@@ -110,7 +110,7 @@ router.post("/login", loginLimiter, async (req: Request, res: Response) => {
       });
     }
 
-    issueAuthCookie(res, user, remember === true);
+    issueAuthCookie(res, user, sessionKindFrom({ remember, app }));
     res.sendStatus(204);
   } catch (err) {
     if (err instanceof Error) {
@@ -119,6 +119,25 @@ router.post("/login", loginLimiter, async (req: Request, res: Response) => {
     res.sendStatus(503);
   }
 });
+
+router.post(
+  "/logout-all",
+  authMiddleware,
+  accountLimiter,
+  async (req: Request, res: Response) => {
+    await prisma.user.update({
+      where: { id: req.userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+    res.sendStatus(204);
+  },
+);
 
 router.post("/logout", (_req: Request, res: Response) => {
   res.clearCookie("token", {

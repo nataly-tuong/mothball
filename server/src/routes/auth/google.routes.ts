@@ -11,6 +11,7 @@ import {
   googleLimiter,
 } from "../../middleware/rateLimiters.js";
 import { issueAuthCookie } from "../../lib/authCookie.js";
+import { NAME_MAX, NAME_MIN } from "../../lib/validation.js";
 import { frontendUrl } from "../../lib/config.js";
 
 const router = Router();
@@ -50,13 +51,24 @@ function failRedirect(res: Response, mode: Mode, code: string) {
   res.redirect(`${frontendUrl}/${page}?${param}=${code}`);
 }
 
+function displayNameFrom(...candidates: (string | undefined)[]) {
+  for (const candidate of candidates) {
+    const clean = (candidate ?? "")
+      .split("@")[0]!
+      .replace(/[^\p{L}\p{N}]/gu, "")
+      .slice(0, NAME_MAX);
+    if (clean.length >= NAME_MIN) return clean;
+  }
+  return "Member";
+}
+
 function statesMatch(a: string, b: string) {
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);
   return bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);
 }
 
-function startGoogle(res: Response, mode: Mode) {
+function startGoogle(res: Response, mode: Mode, fromApp = false) {
   const oauth = getClient();
 
   if (!oauth) {
@@ -66,7 +78,7 @@ function startGoogle(res: Response, mode: Mode) {
 
   const state = crypto.randomBytes(32).toString("hex");
 
-  res.cookie(STATE_COOKIE, `${mode}.${state}`, {
+  res.cookie(STATE_COOKIE, `${mode}.${state}.${fromApp ? "app" : "web"}`, {
     ...stateCookieOptions,
     maxAge: STATE_TTL_MS,
   });
@@ -80,8 +92,8 @@ function startGoogle(res: Response, mode: Mode) {
   );
 }
 
-router.get("/google", googleLimiter, (_req: Request, res: Response) => {
-  startGoogle(res, "login");
+router.get("/google", googleLimiter, (req: Request, res: Response) => {
+  startGoogle(res, "login", req.query.app === "1");
 });
 
 router.get(
@@ -105,9 +117,10 @@ router.get(
     const stored = req.cookies[STATE_COOKIE];
     res.clearCookie(STATE_COOKIE, stateCookieOptions);
 
-    const [storedMode, expectedState] =
+    const [storedMode, expectedState, client] =
       typeof stored === "string" ? stored.split(".") : [];
     const mode: Mode = storedMode === "link" ? "link" : "login";
+    const fromApp = client === "app";
 
     const oauth = getClient();
 
@@ -179,7 +192,7 @@ router.get(
       }
 
       const email = profile.email.trim().toLowerCase();
-      const name = profile.name?.trim() || email.split("@")[0]!;
+      const name = displayNameFrom(profile.given_name, profile.name, email);
 
       let user = await prisma.user.findUnique({ where: { googleId } });
 
@@ -216,7 +229,7 @@ router.get(
         }
       }
 
-      issueAuthCookie(res, user);
+      issueAuthCookie(res, user, fromApp ? "app" : "long");
       res.redirect(`${frontendUrl}/closet`);
     } catch (err) {
       console.error("Google sign-in failed:", err);

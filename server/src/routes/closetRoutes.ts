@@ -19,6 +19,7 @@ import {
   normalizeInviteCode,
   removeMember,
 } from "../lib/closets.js";
+import { logActivity } from "../lib/activity.js";
 import {
   createUploadSignature,
   deleteImages,
@@ -32,6 +33,9 @@ const MAX_CLOSETS_PER_USER = 10;
 const MAX_MEMBERS_PER_CLOSET = 20;
 const MAX_ITEMS_PER_CLOSET = 2000;
 const MAX_PHOTOS = 8;
+const STALE_DAYS_MIN = 7;
+const STALE_DAYS_MAX = 120;
+const ACTIVITY_PAGE_SIZE = 40;
 const MAX_HASHTAGS = 5;
 const PRICE_CENTS_MAX = 10_000_000;
 const STATUSES = ["TO_UPLOAD", "LISTED", "SOLD"] as const;
@@ -73,6 +77,7 @@ const itemSelect = {
   depopUrl: true,
   notes: true,
   listedAt: true,
+  refreshedAt: true,
   soldAt: true,
   createdAt: true,
   updatedAt: true,
@@ -342,6 +347,49 @@ function statusDates(
   };
 }
 
+async function logItemChanges(
+  closetId: number,
+  actorId: number,
+  before: { status: ItemStatus; priceCents: number | null },
+  after: {
+    id: number;
+    name: string;
+    status: ItemStatus;
+    priceCents: number | null;
+    soldPriceCents: number | null;
+  },
+) {
+  const base = { closetId, actorId, itemId: after.id, itemName: after.name };
+
+  if (after.status !== before.status) {
+    if (after.status === "LISTED") {
+      await logActivity({ ...base, type: "ITEM_LISTED" });
+    } else if (after.status === "SOLD") {
+      await logActivity({
+        ...base,
+        type: "ITEM_SOLD",
+        detail:
+          after.soldPriceCents != null ? String(after.soldPriceCents) : null,
+      });
+    } else {
+      await logActivity({ ...base, type: "ITEM_UNLISTED" });
+    }
+  }
+
+  if (
+    after.priceCents !== before.priceCents &&
+    before.priceCents != null &&
+    after.priceCents != null &&
+    after.status !== "SOLD"
+  ) {
+    await logActivity({
+      ...base,
+      type: "ITEM_PRICE_CHANGED",
+      detail: `${before.priceCents}:${after.priceCents}`,
+    });
+  }
+}
+
 function photoCreates(photos: PhotoInput[]) {
   return photos.map((photo, position) => ({ ...photo, position }));
 }
@@ -364,7 +412,10 @@ router.get(
 
     const closet = await prisma.closet.findUnique({
       where: { inviteCode: code },
-      select: { name: true, _count: { select: { members: true } } },
+      select: {
+        name: true,
+        _count: { select: { members: true, items: true } },
+      },
     });
 
     if (!closet) {
@@ -376,6 +427,7 @@ router.get(
     res.send({
       name: closet.name,
       memberCount: closet._count.members,
+      itemCount: closet._count.items,
       inviteCode: code,
     });
   },
@@ -442,6 +494,12 @@ router.post("/", closetWriteLimiter, async (req: Request, res: Response) => {
         select: { id: true },
       });
 
+      await logActivity({
+        closetId: closet.id,
+        actorId: userId,
+        type: "CLOSET_CREATED",
+      });
+
       return res.status(201).send(closet);
     } catch (err) {
       if (
@@ -505,16 +563,40 @@ router.post("/join", closetJoinLimiter, async (req: Request, res: Response) => {
     data: { closetId: closet.id, userId, role: "MEMBER" },
   });
 
+  await logActivity({
+    closetId: closet.id,
+    actorId: userId,
+    type: "MEMBER_JOINED",
+  });
+
   res.status(201).send({ id: closet.id });
 });
 
 router.get("/:closetId", requireMember, async (req: Request, res: Response) => {
+  const membership = await prisma.closetMember.findUnique({
+    where: {
+      closetId_userId: { closetId: req.closetId!, userId: req.userId! },
+    },
+    select: { seenAt: true },
+  });
+
+  const unreadActivity = membership
+    ? await prisma.activity.count({
+        where: {
+          closetId: req.closetId,
+          createdAt: { gt: membership.seenAt },
+          OR: [{ actorId: null }, { actorId: { not: req.userId } }],
+        },
+      })
+    : 0;
+
   const closet = await prisma.closet.findUnique({
     where: { id: req.closetId },
     select: {
       id: true,
       name: true,
       inviteCode: true,
+      staleDays: true,
       members: {
         orderBy: { joinedAt: "asc" },
         select: { role: true, user: { select: { id: true, name: true } } },
@@ -530,6 +612,8 @@ router.get("/:closetId", requireMember, async (req: Request, res: Response) => {
     id: closet.id,
     name: closet.name,
     inviteCode: closet.inviteCode,
+    staleDays: closet.staleDays,
+    unreadActivity,
     role: req.closetRole,
     members: closet.members.map(({ role, user }) => ({ ...user, role })),
   });
@@ -541,14 +625,53 @@ router.patch(
   requireOwner,
   closetWriteLimiter,
   async (req: Request, res: Response) => {
-    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
-    const nameError = getClosetNameError(name);
+    const data: { name?: string; staleDays?: number } = {};
 
-    if (nameError) {
-      return res.status(400).send({ message: nameError });
+    if (req.body?.name !== undefined) {
+      const name =
+        typeof req.body.name === "string" ? req.body.name.trim() : "";
+      const nameError = getClosetNameError(name);
+      if (nameError) {
+        return res.status(400).send({ message: nameError });
+      }
+      data.name = name;
     }
 
-    await prisma.closet.update({ where: { id: req.closetId }, data: { name } });
+    if (req.body?.staleDays !== undefined) {
+      const days = req.body.staleDays;
+      if (
+        typeof days !== "number" ||
+        !Number.isInteger(days) ||
+        days < STALE_DAYS_MIN ||
+        days > STALE_DAYS_MAX
+      ) {
+        return res.status(400).send({
+          message: `Pick between ${STALE_DAYS_MIN} and ${STALE_DAYS_MAX} days.`,
+        });
+      }
+      data.staleDays = days;
+    }
+
+    if (!data.name && data.staleDays === undefined) {
+      return res.status(400).send({ message: "Nothing to update." });
+    }
+
+    const before = await prisma.closet.findUnique({
+      where: { id: req.closetId },
+      select: { name: true },
+    });
+
+    await prisma.closet.update({ where: { id: req.closetId }, data });
+
+    if (data.name && before && data.name !== before.name) {
+      await logActivity({
+        closetId: req.closetId!,
+        actorId: req.userId!,
+        type: "CLOSET_RENAMED",
+        detail: data.name,
+      });
+    }
+
     res.sendStatus(204);
   },
 );
@@ -586,6 +709,18 @@ router.delete(
   "/:closetId/members/me",
   requireMember,
   async (req: Request, res: Response) => {
+    const others = await prisma.closetMember.count({
+      where: { closetId: req.closetId, userId: { not: req.userId } },
+    });
+
+    if (others > 0) {
+      await logActivity({
+        closetId: req.closetId!,
+        actorId: req.userId!,
+        type: "MEMBER_LEFT",
+      });
+    }
+
     await removeMember(req.closetId!, req.userId!);
     res.sendStatus(204);
   },
@@ -608,7 +743,22 @@ router.delete(
         .send({ message: "Use Leave closet to remove yourself." });
     }
 
+    const member = await prisma.closetMember.findUnique({
+      where: { closetId_userId: { closetId: req.closetId!, userId: memberId } },
+      select: { user: { select: { name: true } } },
+    });
+
+    if (!member) {
+      return res.status(404).send({ message: "Member not found." });
+    }
+
     await removeMember(req.closetId!, memberId);
+    await logActivity({
+      closetId: req.closetId!,
+      actorId: req.userId!,
+      type: "MEMBER_REMOVED",
+      detail: member.user.name,
+    });
     res.sendStatus(204);
   },
 );
@@ -668,6 +818,15 @@ router.post(
         select: itemSelect,
       });
 
+      await logActivity({
+        closetId,
+        actorId: req.userId!,
+        type: "ITEM_ADDED",
+        itemId: item.id,
+        itemName: item.name,
+        detail: item.status,
+      });
+
       res.status(201).send(item);
     } catch (err) {
       if (isUniqueViolation(err)) {
@@ -691,6 +850,8 @@ router.patch(
           where: { id: itemId, closetId },
           select: {
             id: true,
+            name: true,
+            status: true,
             priceCents: true,
             minPriceCents: true,
             listedAt: true,
@@ -733,10 +894,18 @@ router.patch(
 
         return tx.item.update({
           where: { id: existing.id },
-          data: { ...fields, ...statusDates(fields.status, existing) },
+          data: {
+            ...fields,
+            ...statusDates(fields.status, existing),
+            ...(fields.status === "LISTED" && existing.status !== "LISTED"
+              ? { refreshedAt: new Date() }
+              : {}),
+          },
           select: itemSelect,
         });
       });
+
+      await logItemChanges(closetId, req.userId!, existing, item);
 
       if (photos) {
         const kept = new Set(photos.map((photo) => photo.publicId));
@@ -767,7 +936,11 @@ router.delete(
     const existing = itemId
       ? await prisma.item.findFirst({
           where: { id: itemId, closetId: req.closetId },
-          select: { id: true, photos: { select: { publicId: true } } },
+          select: {
+            id: true,
+            name: true,
+            photos: { select: { publicId: true } },
+          },
         })
       : null;
 
@@ -776,7 +949,103 @@ router.delete(
     }
 
     await prisma.item.delete({ where: { id: existing.id } });
+    await logActivity({
+      closetId: req.closetId!,
+      actorId: req.userId!,
+      type: "ITEM_DELETED",
+      itemName: existing.name,
+    });
     deleteImages(existing.photos.map((photo) => photo.publicId));
+    res.sendStatus(204);
+  },
+);
+
+router.post(
+  "/:closetId/items/:itemId/relist",
+  requireMember,
+  closetWriteLimiter,
+  async (req: Request, res: Response) => {
+    const itemId = parseId(req.params.itemId);
+
+    const existing = itemId
+      ? await prisma.item.findFirst({
+          where: { id: itemId, closetId: req.closetId },
+          select: { id: true, status: true },
+        })
+      : null;
+
+    if (!existing) {
+      return res.status(404).send({ message: "Item not found." });
+    }
+
+    if (existing.status !== "LISTED") {
+      return res
+        .status(400)
+        .send({ message: "Only listed items can be marked as relisted." });
+    }
+
+    const item = await prisma.item.update({
+      where: { id: existing.id },
+      data: { refreshedAt: new Date() },
+      select: itemSelect,
+    });
+
+    await logActivity({
+      closetId: req.closetId!,
+      actorId: req.userId!,
+      type: "ITEM_RELISTED",
+      itemId: item.id,
+      itemName: item.name,
+    });
+
+    res.send(item);
+  },
+);
+
+router.get(
+  "/:closetId/activity",
+  requireMember,
+  async (req: Request, res: Response) => {
+    const before = parseId(req.query.before);
+
+    const activities = await prisma.activity.findMany({
+      where: {
+        closetId: req.closetId,
+        ...(before ? { id: { lt: before } } : {}),
+      },
+      orderBy: { id: "desc" },
+      take: ACTIVITY_PAGE_SIZE + 1,
+      select: {
+        id: true,
+        type: true,
+        itemId: true,
+        itemName: true,
+        detail: true,
+        createdAt: true,
+        actor: { select: { id: true, name: true } },
+      },
+    });
+
+    const hasMore = activities.length > ACTIVITY_PAGE_SIZE;
+    const page = activities.slice(0, ACTIVITY_PAGE_SIZE);
+
+    res.send({
+      activities: page,
+      nextCursor: hasMore ? page[page.length - 1]!.id : null,
+    });
+  },
+);
+
+router.post(
+  "/:closetId/activity/seen",
+  requireMember,
+  async (req: Request, res: Response) => {
+    await prisma.closetMember.update({
+      where: {
+        closetId_userId: { closetId: req.closetId!, userId: req.userId! },
+      },
+      data: { seenAt: new Date() },
+    });
     res.sendStatus(204);
   },
 );
