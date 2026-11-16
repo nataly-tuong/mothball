@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 
 const CONTACT_EMAIL = "ntuong1117@gmail.com";
 const EFFECTIVE_DATE = "[November 07, 2026]";
-const REPO_URL = "https://github.com/nataly-tuong/mothball";
+// const REPO_URL = "https://github.com/nataly-tuong/mothball";
 
 function Section({
   title,
