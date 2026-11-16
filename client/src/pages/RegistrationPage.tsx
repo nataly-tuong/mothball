@@ -10,6 +10,7 @@ import {
   normalizeInviteCode,
   setPendingInvite,
 } from "../lib/invites";
+import { apiFetch } from "../lib/api";
 
 const NAME_MIN = 2;
 const NAME_MAX = 20;
@@ -172,7 +173,7 @@ export default function RegistrationPage(): JSX.Element {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await apiFetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -186,7 +187,7 @@ export default function RegistrationPage(): JSX.Element {
       }
 
       await refreshUser();
-      navigate("/closet");
+      navigate("/verify-email", { state: { email: String(email ?? "") } });
     } catch {
       setError("Can't reach the server. Please try again.");
     } finally {

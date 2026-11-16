@@ -15,6 +15,7 @@ import {
 } from "../lib/invites";
 import { useAuth } from "../context/AuthContext";
 import PasswordInput from "../components/PasswordInput";
+import { apiFetch } from "../lib/api";
 
 const GOOGLE_ERRORS: Record<string, string> = {
   google_cancelled: "Google sign-in was cancelled.",
@@ -73,7 +74,7 @@ export default function LoginPage(): JSX.Element {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await apiFetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -88,7 +89,7 @@ export default function LoginPage(): JSX.Element {
 
       if (!res.ok) {
         if (data?.code === "EMAIL_NOT_VERIFIED") {
-          void fetch("/api/auth/resend-verification", {
+          void apiFetch("/api/auth/resend-verification", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),

@@ -1,5 +1,5 @@
 import type { JSX } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import MothballSVG from "../assets/favicon.svg";
 import BgImage from "../assets/dddepth-061.jpg";
 
@@ -14,9 +14,9 @@ export default function AuthLayout(): JSX.Element {
   const tint = tints[pathname] ?? "bg-lavender/60";
 
   return (
-    <main className="flex min-h-screen">
+    <main className="flex min-h-dvh">
       <div
-        className={`relative flex flex-1 m-4 py-10 rounded-2xl flex-col items-center justify-center border border-plum/15 ring-1 ring-inset ring-white/50 shadow-lg shadow-plum/10 ${tint} bg-blend-overlay bg-cover bg-center transition-colors duration-700 ease-in-out`}
+        className={`relative hidden md:flex flex-1 m-4 py-10 rounded-2xl flex-col items-center justify-center border border-plum/15 ring-1 ring-inset ring-white/50 shadow-lg shadow-plum/10 ${tint} bg-blend-overlay bg-cover bg-center transition-colors duration-700 ease-in-out`}
         style={{ backgroundImage: `url(${BgImage})` }}
       >
         <img
@@ -33,7 +33,13 @@ export default function AuthLayout(): JSX.Element {
         </p>
       </div>
 
-      <div className="flex flex-col bg-white flex-1 px-10 gap-6 items-center justify-center">
+      <div className="flex flex-col bg-white flex-1 px-6 py-10 sm:px-10 gap-6 items-center justify-center">
+        <Link to="/" className="flex items-center gap-2 self-center md:hidden">
+          <img src={MothballSVG} className="w-9" alt="" />
+          <span className="font-gaegu text-5xl font-extrabold text-plum">
+            Mothball
+          </span>
+        </Link>
         <Outlet />
       </div>
     </main>

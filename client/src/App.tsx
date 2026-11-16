@@ -10,6 +10,7 @@ import type { Icon } from "@phosphor-icons/react";
 import MothballSVG from "./assets/favicon.svg";
 import BgImage from "./assets/dddepth-061.jpg";
 import { Link } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 
 const steps: { title: string; text: string; Icon: Icon }[] = [
   {
@@ -87,6 +88,8 @@ function ClosetPreview(): JSX.Element {
 }
 
 export default function App(): JSX.Element {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-mist text-plum">
       <div className="relative">
@@ -94,28 +97,33 @@ export default function App(): JSX.Element {
           aria-label="Main"
           className={`absolute inset-x-4 top-4 z-20 mx-auto flex max-w-3xl items-center justify-between rounded-[22px] border border-plum/10 bg-white px-4 py-2 ${glowRing}`}
         >
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex shrink-0 items-center gap-2">
             <img src={MothballSVG} alt="" className="w-5" />
             <span className="font-gaegu text-3xl font-bold leading-none">
               Mothball
             </span>
           </Link>
 
-          <div className="flex items-center gap-2 text-sm font-medium">
+          <div className="flex items-center gap-1 whitespace-nowrap text-sm font-medium sm:gap-2">
             <a
               href="#how-it-works"
               className="hidden px-2 py-1 transition hover:opacity-60 sm:inline"
             >
               How it works
             </a>
-            <Link to="/login" className="px-2 py-1 transition hover:opacity-60">
-              Log in
-            </Link>
+            {user ? null : (
+              <Link
+                to="/login"
+                className="px-2 py-1 transition hover:opacity-60"
+              >
+                Log in
+              </Link>
+            )}
             <Link
-              to="/register"
-              className="inline-flex items-center justify-center rounded-full border-[1.5px] font-semibold transition duration-200 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac border-transparent bg-plum text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25),0_0_0_1px_rgba(0,0,0,0.15),0_3px_2px_0_rgba(0,0,0,0.06)] hover:brightness-110 px-6 py-3"
+              to={user ? "/closet" : "/register"}
+              className="inline-flex items-center justify-center rounded-full border-[1.5px] font-semibold transition duration-200 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lilac border-transparent bg-plum text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25),0_0_0_1px_rgba(0,0,0,0.15),0_3px_2px_0_rgba(0,0,0,0.06)] hover:brightness-110 px-4 py-2 sm:px-6 sm:py-3"
             >
-              Get started
+              {user ? "Open closet" : "Get started"}
             </Link>
           </div>
         </nav>

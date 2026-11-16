@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { setupPwa } from "./lib/pwa";
+import WakeNotice from "./components/WakeNotice";
 
 import "./index.css";
 import App from "./App";
@@ -55,6 +56,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
       <RouterProvider router={router} />
+      <WakeNotice />
     </AuthProvider>
   </StrictMode>,
 );

@@ -2,6 +2,7 @@ import { useEffect, useState, type JSX } from "react";
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { apiFetch } from "../lib/api";
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
@@ -46,7 +47,7 @@ export default function VerifyEmail(): JSX.Element {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/auth/verify-email", {
+      const res = await apiFetch("/api/auth/verify-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -80,7 +81,7 @@ export default function VerifyEmail(): JSX.Element {
     setInfo("");
 
     try {
-      const res = await fetch("/api/auth/resend-verification", {
+      const res = await apiFetch("/api/auth/resend-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

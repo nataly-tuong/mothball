@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { apiFetch } from "../lib/api";
 
 type User = {
   id: number;
@@ -29,13 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function refreshUser() {
     try {
-      const res = await fetch("/api/auth/me", {
+      const res = await apiFetch("/api/auth/me", {
         credentials: "include",
         cache: "no-store",
       });
 
       if (!res.ok) {
-        setUser(null);
+        if (res.status < 500) setUser(null);
         return;
       }
 

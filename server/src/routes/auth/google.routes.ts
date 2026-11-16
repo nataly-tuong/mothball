@@ -11,6 +11,7 @@ import {
   googleLimiter,
 } from "../../middleware/rateLimiters.js";
 import { issueAuthCookie } from "../../lib/authCookie.js";
+import { frontendUrl } from "../../lib/config.js";
 
 const router = Router();
 
@@ -18,8 +19,6 @@ const STATE_COOKIE = "oauth_state";
 const STATE_TTL_MS = 10 * 60 * 1000;
 
 type Mode = "login" | "link";
-
-const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
 
 const redirectUri =
   process.env.GOOGLE_REDIRECT_URI ?? `${frontendUrl}/api/auth/google/callback`;

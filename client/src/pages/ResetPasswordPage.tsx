@@ -1,6 +1,7 @@
 import { useEffect, useState, type JSX, type SubmitEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import PasswordInput from "../components/PasswordInput";
+import { apiFetch } from "../lib/api";
 
 type TokenStatus = "checking" | "valid" | "invalid";
 
@@ -28,7 +29,7 @@ export default function ResetPasswordPage(): JSX.Element {
 
     async function validateToken() {
       try {
-        const res = await fetch("/api/auth/validate-reset-token", {
+        const res = await apiFetch("/api/auth/validate-reset-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
@@ -116,7 +117,7 @@ export default function ResetPasswordPage(): JSX.Element {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/reset-password", {
+      const res = await apiFetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password }),

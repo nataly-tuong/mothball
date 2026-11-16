@@ -11,6 +11,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import MothballSVG from "../assets/favicon.svg";
 import { openInstallGuide } from "../lib/pwa";
+import { apiFetch } from "../lib/api";
 
 const pill =
   "inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition duration-200 cursor-pointer active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
@@ -50,7 +51,7 @@ export default function Navbar() {
   async function handleLogout() {
     setMenuOpen(false);
     try {
-      const res = await fetch("/api/auth/logout", {
+      const res = await apiFetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
@@ -93,13 +94,16 @@ export default function Navbar() {
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-haspopup="menu"
+              aria-label="Account menu"
               aria-expanded={menuOpen}
               className={`${ghostPill} gap-2 pl-1 pr-3`}
             >
               <span className="grid h-7 w-7 place-items-center rounded-full bg-lilac text-xs font-bold uppercase text-white">
                 {user.name.slice(0, 1)}
               </span>
-              <span className="max-w-28 truncate">{user.name}</span>
+              <span className="hidden max-w-28 truncate sm:inline">
+                {user.name}
+              </span>
               <CaretDownIcon
                 size={14}
                 weight="bold"

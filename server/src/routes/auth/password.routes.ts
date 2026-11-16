@@ -21,10 +21,9 @@ import {
   isPasswordBreached,
   BREACHED_PASSWORD_MESSAGE,
 } from "../../lib/pwnedPassword.js";
+import { frontendUrl } from "../../lib/config.js";
 
 const router = Router();
-
-const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
 
 router.post(
   "/forgot-password",

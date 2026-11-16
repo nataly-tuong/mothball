@@ -1,6 +1,7 @@
 import { useEffect, useState, type JSX, type SubmitEvent } from "react";
 import { CheckCircleIcon, EnvelopeSimpleIcon } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
+import { apiFetch } from "../lib/api";
 
 const RESEND_COOLDOWN = 30;
 
@@ -24,7 +25,7 @@ export default function ForgotPasswordPage(): JSX.Element {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await apiFetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: address }),
