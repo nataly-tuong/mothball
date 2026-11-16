@@ -1,5 +1,5 @@
 import type { JSX } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, NavLink, useNavigate, useParams } from "react-router-dom";
 import {
   ClockCounterClockwiseIcon,
@@ -9,6 +9,7 @@ import {
   PencilSimpleIcon,
   PlusIcon,
   UsersIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import ActivityFeed from "../components/ActivityFeed";
 import AppShell from "../components/AppShell";
@@ -79,6 +80,7 @@ function ClosetPage({
 
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -545,13 +547,27 @@ function ClosetPage({
                     aria-hidden="true"
                   />
                   <input
+                    ref={searchRef}
                     aria-label="Search items"
                     type="search"
                     placeholder="Search title, brand, size, #tag"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full rounded-full border border-lavender-gray bg-white py-2 pl-10 pr-4 text-base placeholder:text-plum/40 focus:border-lilac focus:outline-none focus:ring-2 focus:ring-lilac/40 sm:text-sm"
+                    className="w-full rounded-full border border-lavender-gray bg-white py-2 pl-10 pr-10 [&::-webkit-search-cancel-button]:hidden text-base placeholder:text-plum/40 focus:border-lilac focus:outline-none focus:ring-2 focus:ring-lilac/40 sm:text-sm"
                   />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch("");
+                        searchRef.current?.focus();
+                      }}
+                      aria-label="Clear search"
+                      className="absolute right-1.5 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-lavender text-plum transition cursor-pointer hover:bg-lilac/30 active:scale-90"
+                    >
+                      <XIcon size={14} weight="bold" aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
                 <div className="grid grid-cols-4 gap-1 rounded-full bg-lavender/70 p-1 sm:flex sm:gap-2 sm:bg-transparent sm:p-0">
                   {filterElements}
