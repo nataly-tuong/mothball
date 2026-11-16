@@ -50,12 +50,28 @@ export default function ItemViewDialog({
   onStatusChange,
 }: ItemViewDialogProps): JSX.Element {
   return (
-    <Modal open={open} size="lg" title={item?.name ?? ""} onClose={onClose}>
+    <Modal
+      open={open}
+      size="lg"
+      title={item?.name ?? ""}
+      onClose={onClose}
+      headerActions={
+        item && (
+          <button
+            type="button"
+            onClick={() => onEdit(item)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-plum/20 px-3.5 text-sm font-medium text-plum transition cursor-pointer hover:bg-lavender"
+          >
+            <PencilSimpleIcon size={16} aria-hidden="true" />
+            Edit
+          </button>
+        )
+      }
+    >
       {item && (
         <ItemView
           key={item.id}
           item={item}
-          onEdit={onEdit}
           staleDays={staleDays}
           onRelist={onRelist}
           onStatusChange={onStatusChange}
@@ -99,13 +115,11 @@ function useCopy() {
 
 function ItemView({
   item,
-  onEdit,
   staleDays,
   onRelist,
   onStatusChange,
 }: {
   item: Item;
-  onEdit: (item: Item) => void;
   staleDays?: number;
   onRelist?: (item: Item) => Promise<boolean>;
   onStatusChange?: (item: Item, status: ItemStatus) => void;
@@ -148,17 +162,26 @@ function ItemView({
     };
   }, [canShare, hasPhotos, item]);
 
+  function slideStep(el: HTMLDivElement) {
+    const [first, second] = Array.from(el.children) as HTMLElement[];
+    if (!first) return el.clientWidth;
+    return second ? second.offsetLeft - first.offsetLeft : first.offsetWidth;
+  }
+
   function scrollTo(next: number) {
     const el = track.current;
     if (!el) return;
     const clamped = Math.max(0, Math.min(photos.length - 1, next));
-    el.scrollTo({ left: clamped * el.clientWidth, behavior: "smooth" });
+    el.scrollTo({ left: clamped * slideStep(el), behavior: "smooth" });
   }
 
   function handleScroll() {
     const el = track.current;
-    if (!el || !el.clientWidth) return;
-    setIndex(Math.round(el.scrollLeft / el.clientWidth));
+    if (!el) return;
+    const step = slideStep(el);
+    if (!step) return;
+    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
+    setIndex(atEnd ? photos.length - 1 : Math.round(el.scrollLeft / step));
   }
 
   async function sharePhotos() {
@@ -215,12 +238,6 @@ function ItemView({
     ["Belongs to", item.owner?.name],
   ].filter((entry): entry is [string, string] => Boolean(entry[1]));
 
-  const prices = [
-    ["Listed price", item.priceCents],
-    ["Lowest acceptable", item.minPriceCents],
-    ["Sold for", item.status === "SOLD" ? item.soldPriceCents : null],
-  ].filter((entry): entry is [string, number] => entry[1] != null);
-
   const fullDescription = buildDescription(item);
 
   return (
@@ -231,7 +248,7 @@ function ItemView({
             <div
               ref={track}
               onScroll={handleScroll}
-              className="flex aspect-square snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {photos.map((photo, i) => (
                 <img
@@ -239,7 +256,8 @@ function ItemView({
                   src={squareUrl(photo.url, 1000)}
                   alt={`${item.name}, photo ${i + 1} of ${photos.length}`}
                   loading={i === 0 ? "eager" : "lazy"}
-                  className="aspect-square w-full shrink-0 snap-center object-cover"
+                  draggable={false}
+                  className="aspect-square w-full shrink-0 snap-start object-cover"
                 />
               ))}
             </div>
@@ -271,7 +289,7 @@ function ItemView({
               >
                 <CaretRightIcon size={18} weight="bold" />
               </button>
-              <span className="absolute bottom-2 right-2 rounded-full bg-plum/80 px-2.5 py-0.5 text-xs font-medium text-white">
+              <span className="absolute right-2 top-2 rounded-full bg-plum/80 px-2.5 py-0.5 text-xs font-medium text-white sm:bottom-2 sm:right-2 sm:top-auto">
                 {index + 1}/{photos.length}
               </span>
             </>
@@ -285,7 +303,23 @@ function ItemView({
         </div>
 
         {photos.length > 1 && (
-          <ul className="grid grid-cols-8 gap-1.5">
+          <div
+            className="flex justify-center gap-1.5 sm:hidden"
+            aria-hidden="true"
+          >
+            {photos.map((photo, i) => (
+              <span
+                key={photo.publicId}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  index === i ? "w-5 bg-plum" : "w-1.5 bg-plum/25"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {photos.length > 1 && (
+          <ul className="hidden grid-cols-8 gap-1.5 sm:grid">
             {photos.map((photo, i) => (
               <li key={photo.publicId}>
                 <button
@@ -311,39 +345,51 @@ function ItemView({
         )}
 
         {hasPhotos && (
-          <div className="flex flex-wrap gap-2">
-            {canShare && (
+          <div className="flex items-center gap-3">
+            {canShare ? (
               <button
                 type="button"
                 onClick={sharePhotos}
                 disabled={!shareFiles}
-                className="btn-small-primary"
+                className="btn-small-primary flex-1"
               >
                 <ShareNetworkIcon size={16} aria-hidden="true" />
-                {shareFiles ? "Save photos" : "Preparing..."}
+                {shareFiles ? "Save all photos" : "Preparing photos..."}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={downloadZip}
+                disabled={zipping}
+                className="btn-small-primary flex-1"
+              >
+                <FileZipIcon size={16} aria-hidden="true" />
+                {zipping ? "Zipping..." : "Download all photos"}
               </button>
             )}
-            <button
-              type="button"
-              onClick={downloadZip}
-              disabled={zipping}
-              className={canShare ? "btn-small-secondary" : "btn-small-primary"}
-            >
-              <FileZipIcon size={16} aria-hidden="true" />
-              {zipping ? "Zipping..." : "Download all (.zip)"}
-            </button>
             <a
               href={photoDownloadUrl(
                 photos[index]?.url ?? photos[0].url,
                 item.name,
                 index,
               )}
-              className="btn-small-secondary"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-plum/70 hover:text-plum"
             >
               <DownloadSimpleIcon size={16} aria-hidden="true" />
               This photo
             </a>
           </div>
+        )}
+
+        {hasPhotos && canShare && (
+          <button
+            type="button"
+            onClick={downloadZip}
+            disabled={zipping}
+            className="self-start text-xs font-medium text-plum/60 cursor-pointer hover:text-plum"
+          >
+            {zipping ? "Zipping..." : "Or download a .zip instead"}
+          </button>
         )}
 
         {downloadError && (
@@ -354,51 +400,47 @@ function ItemView({
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <div
-            role="radiogroup"
-            aria-label="Status"
-            className="grid w-full grid-cols-3 gap-1 rounded-full bg-mist p-1 sm:w-auto"
-          >
-            {STATUS_OPTIONS.map(({ value, label }) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={item.status === value}
-                disabled={!onStatusChange}
-                onClick={() =>
-                  item.status !== value && onStatusChange?.(item, value)
-                }
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                  item.status === value
-                    ? STATUS_THEME[value].active
-                    : "text-plum/60 hover:bg-white hover:text-plum"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {item.listingUrl && (
-            <a
-              href={item.listingUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-sm font-medium text-lilac hover:underline"
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <p className="font-fredoka text-3xl font-medium text-plum">
+            {item.status === "SOLD" && item.soldPriceCents != null
+              ? formatPrice(item.soldPriceCents)
+              : item.priceCents != null
+                ? formatPrice(item.priceCents)
+                : "No price yet"}
+          </p>
+          <p className="text-sm text-plum/60">
+            {item.status === "SOLD" && item.soldPriceCents != null
+              ? `Sold${item.priceCents != null ? ` · listed at ${formatPrice(item.priceCents)}` : ""}`
+              : item.minPriceCents != null
+                ? `Lowest ${formatPrice(item.minPriceCents)}`
+                : ""}
+          </p>
+        </div>
+
+        <div
+          role="radiogroup"
+          aria-label="Status"
+          className="grid grid-cols-3 gap-1 rounded-full bg-mist p-1"
+        >
+          {STATUS_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={item.status === value}
+              disabled={!onStatusChange}
+              onClick={() =>
+                item.status !== value && onStatusChange?.(item, value)
+              }
+              className={`rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap transition cursor-pointer ${
+                item.status === value
+                  ? STATUS_THEME[value].active
+                  : "text-plum/60 hover:bg-white hover:text-plum"
+              }`}
             >
-              Open listing
-              <ArrowSquareOutIcon size={14} aria-hidden="true" />
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() => onEdit(item)}
-            className="btn-small-secondary ml-auto"
-          >
-            <PencilSimpleIcon size={16} aria-hidden="true" />
-            Edit
-          </button>
+              {label}
+            </button>
+          ))}
         </div>
 
         {stale && onRelist && (
@@ -419,60 +461,45 @@ function ItemView({
           </div>
         )}
 
-        {prices.length > 0 && (
-          <dl className="grid grid-cols-3 gap-2">
-            {prices.map(([label, cents]) => (
-              <div key={label} className="rounded-xl bg-lavender/60 px-3 py-2">
-                <dt className="text-xs text-plum/60">{label}</dt>
-                <dd className="font-fredoka text-xl font-medium text-plum">
-                  {formatPrice(cents)}
-                </dd>
-              </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-plum/50">
+            Copy to post
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                ["title", "Title", item.name],
+                ["description", "Description", fullDescription],
+                [
+                  "price",
+                  "Price",
+                  item.priceCents != null
+                    ? (item.priceCents / 100).toFixed(2)
+                    : "",
+                ],
+              ] as const
+            ).map(([key, label, text]) => (
+              <button
+                key={key}
+                type="button"
+                disabled={!text}
+                onClick={() => copy(key, text)}
+                className="flex flex-col items-center gap-1 rounded-xl border border-lavender-gray bg-white px-2 py-2.5 text-xs font-medium text-plum transition cursor-pointer hover:border-lilac hover:bg-lavender/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {copied === key ? (
+                  <CheckIcon
+                    size={18}
+                    weight="bold"
+                    className="text-emerald-600"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <CopyIcon size={18} aria-hidden="true" />
+                )}
+                {copied === key ? "Copied" : label}
+              </button>
             ))}
-          </dl>
-        )}
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => copy("title", item.name)}
-            className="btn-small-secondary"
-          >
-            {copied === "title" ? (
-              <CheckIcon size={16} weight="bold" aria-hidden="true" />
-            ) : (
-              <CopyIcon size={16} aria-hidden="true" />
-            )}
-            {copied === "title" ? "Copied" : "Copy title"}
-          </button>
-          {fullDescription && (
-            <button
-              type="button"
-              onClick={() => copy("description", fullDescription)}
-              className="btn-small-secondary"
-            >
-              {copied === "description" ? (
-                <CheckIcon size={16} weight="bold" aria-hidden="true" />
-              ) : (
-                <CopyIcon size={16} aria-hidden="true" />
-              )}
-              {copied === "description" ? "Copied" : "Copy description"}
-            </button>
-          )}
-          {item.priceCents != null && (
-            <button
-              type="button"
-              onClick={() => copy("price", (item.priceCents! / 100).toFixed(2))}
-              className="btn-small-secondary"
-            >
-              {copied === "price" ? (
-                <CheckIcon size={16} weight="bold" aria-hidden="true" />
-              ) : (
-                <CopyIcon size={16} aria-hidden="true" />
-              )}
-              {copied === "price" ? "Copied" : "Copy price"}
-            </button>
-          )}
+          </div>
         </div>
 
         {fullDescription ? (
@@ -492,6 +519,18 @@ function ItemView({
               </div>
             ))}
           </dl>
+        )}
+
+        {item.listingUrl && (
+          <a
+            href={item.listingUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-between gap-3 rounded-xl border border-lavender-gray px-4 py-3 text-sm font-medium text-plum transition hover:border-lilac hover:bg-lavender/40"
+          >
+            Open listing
+            <ArrowSquareOutIcon size={16} aria-hidden="true" />
+          </a>
         )}
 
         {item.notes && (

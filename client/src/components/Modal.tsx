@@ -7,6 +7,7 @@ type ModalProps = {
   onClose: () => void;
   children: ReactNode;
   size?: "md" | "lg";
+  headerActions?: ReactNode;
 };
 
 export default function Modal({
@@ -15,6 +16,7 @@ export default function Modal({
   onClose,
   children,
   size = "md",
+  headerActions,
 }: ModalProps): JSX.Element {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -45,25 +47,28 @@ export default function Modal({
       className={`m-auto max-h-[92dvh] w-[calc(100%-1rem)] overflow-y-auto overscroll-contain ${size === "lg" ? "max-w-3xl" : "max-w-lg"} rounded-2xl border border-plum/15 bg-white p-0 text-plum shadow-xl shadow-plum/25 backdrop:bg-plum/40 backdrop:backdrop-blur-[2px]`}
     >
       {open && (
-        <div className="flex flex-col gap-5 p-5 sm:p-8">
-          <div className="flex items-start justify-between gap-4">
+        <>
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-lavender-gray/70 bg-white/95 px-5 py-3 backdrop-blur sm:px-8 sm:py-4">
             <h2
               id="modal-title"
-              className="font-fredoka text-2xl font-medium leading-tight"
+              className="min-w-0 truncate font-fredoka text-xl font-medium leading-tight sm:text-2xl"
             >
               {title}
             </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="rounded-full p-1.5 text-plum/60 transition cursor-pointer hover:bg-lavender hover:text-plum focus-visible:outline-2 focus-visible:outline-lilac"
-            >
-              <XIcon size={20} weight="bold" />
-            </button>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {headerActions}
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="grid h-9 w-9 place-items-center rounded-full text-plum/60 transition cursor-pointer hover:bg-lavender hover:text-plum focus-visible:outline-2 focus-visible:outline-lilac"
+              >
+                <XIcon size={20} weight="bold" />
+              </button>
+            </div>
           </div>
-          {children}
-        </div>
+          <div className="flex flex-col gap-5 p-5 sm:p-8">{children}</div>
+        </>
       )}
     </dialog>
   );
