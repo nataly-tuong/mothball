@@ -9,6 +9,7 @@ import {
   FileZipIcon,
   PencilSimpleIcon,
   ShareNetworkIcon,
+  TrashIcon,
 } from "@phosphor-icons/react";
 import Modal from "./Modal";
 import {
@@ -38,6 +39,7 @@ type ItemViewDialogProps = {
   staleDays?: number;
   onRelist?: (item: Item) => Promise<boolean>;
   onStatusChange?: (item: Item, status: ItemStatus) => void;
+  onDelete?: (item: Item) => Promise<boolean>;
 };
 
 export default function ItemViewDialog({
@@ -48,6 +50,7 @@ export default function ItemViewDialog({
   staleDays,
   onRelist,
   onStatusChange,
+  onDelete,
 }: ItemViewDialogProps): JSX.Element {
   return (
     <Modal
@@ -75,6 +78,7 @@ export default function ItemViewDialog({
           staleDays={staleDays}
           onRelist={onRelist}
           onStatusChange={onStatusChange}
+          onDelete={onDelete}
         />
       )}
     </Modal>
@@ -118,13 +122,17 @@ function ItemView({
   staleDays,
   onRelist,
   onStatusChange,
+  onDelete,
 }: {
   item: Item;
   staleDays?: number;
   onRelist?: (item: Item) => Promise<boolean>;
   onStatusChange?: (item: Item, status: ItemStatus) => void;
+  onDelete?: (item: Item) => Promise<boolean>;
 }): JSX.Element {
   const [relisting, setRelisting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const stale = staleDays !== undefined && isStale(item, staleDays);
   const days = daysListed(item);
   const track = useRef<HTMLDivElement>(null);
@@ -551,6 +559,53 @@ function ItemView({
           {item.soldAt && ` · Sold ${formatDate(item.soldAt)}`}
         </p>
       </div>
+
+      {onDelete && (
+        <div className="flex flex-col items-center gap-2 border-t border-lavender-gray pt-4 md:col-span-2">
+          {confirmDelete ? (
+            <>
+              <p className="text-sm text-plum">
+                Delete this listing? This can't be undone.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={deleting}
+                  className="btn-small-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={async () => {
+                    setDeleting(true);
+                    const ok = await onDelete(item);
+                    if (!ok) {
+                      setDeleting(false);
+                      setConfirmDelete(false);
+                    }
+                  }}
+                  className="btn-small-danger"
+                >
+                  <TrashIcon size={16} aria-hidden="true" />
+                  {deleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-coral transition cursor-pointer hover:bg-coral/10"
+            >
+              <TrashIcon size={16} aria-hidden="true" />
+              Delete listing
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -294,6 +294,19 @@ function ClosetPage({
     );
   }
 
+  async function deleteItem(item: Item) {
+    setActionError("");
+    const result = await api(`/api/closets/${closetId}/items/${item.id}`, {
+      method: "DELETE",
+    });
+    if (!result.ok) {
+      setActionError(result.message);
+      return false;
+    }
+    handleDeleted(item.id);
+    return true;
+  }
+
   async function relistItem(item: Item) {
     setActionError("");
     const result = await api<Item>(
@@ -607,6 +620,7 @@ function ClosetPage({
             staleDays={closet.staleDays}
             onRelist={relistItem}
             onStatusChange={changeStatus}
+            onDelete={deleteItem}
           />
 
           <ItemDialog
