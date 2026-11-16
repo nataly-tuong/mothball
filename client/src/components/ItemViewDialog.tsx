@@ -8,6 +8,7 @@ import {
   DownloadSimpleIcon,
   FileZipIcon,
   PencilSimpleIcon,
+  PushPinIcon,
   ShareNetworkIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
@@ -250,6 +251,26 @@ function ItemView({
 
   return (
     <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:items-start md:gap-6">
+      {item.notes && (
+        <aside
+          aria-label="Pinned note"
+          className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm text-amber-950 md:col-span-2"
+        >
+          <PushPinIcon
+            size={18}
+            weight="fill"
+            className="mt-0.5 shrink-0 -rotate-12 text-amber-500"
+            aria-hidden="true"
+          />
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+              Note
+            </p>
+            <p className="whitespace-pre-line leading-relaxed">{item.notes}</p>
+          </div>
+        </aside>
+      )}
+
       <div className="flex flex-col gap-3">
         <div className="relative overflow-hidden rounded-xl border border-lavender-gray bg-lavender">
           {hasPhotos ? (
@@ -539,15 +560,6 @@ function ItemView({
             Open listing
             <ArrowSquareOutIcon size={16} aria-hidden="true" />
           </a>
-        )}
-
-        {item.notes && (
-          <div className="rounded-xl bg-mist p-3 text-sm text-plum/80">
-            <p className="mb-0.5 text-xs font-semibold text-plum/60">
-              Private notes
-            </p>
-            <p className="whitespace-pre-line">{item.notes}</p>
-          </div>
         )}
 
         <p className="text-xs text-plum/60">
