@@ -4,6 +4,7 @@ import type { Request, Response, NextFunction } from "express";
 import authRoutes from "./routes/authRoutes.js";
 import closetRoutes from "./routes/closetRoutes.js";
 import { startCleanupJobs } from "./lib/cleanup.js";
+import { mailTransport } from "./lib/mailer.js";
 import { frontendUrl, isProduction } from "./lib/config.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -64,6 +65,7 @@ app.get("/api/health", (req: Request, res: Response) => {
     ok: true,
     yourIp: req.ip,
     proxyHops: forwarded ? forwarded.split(",").length : 0,
+    mail: mailTransport(),
   });
 });
 

@@ -35,11 +35,19 @@ router.post(
         data: { verificationToken: hashed, verificationTokenExpiry: expiry },
       });
 
-      void sendMail(
-        user.email,
-        deleteCodeSubject(code),
-        deleteCodeHtml(code),
-      ).catch((err) => console.error("Delete code email failed:", err));
+      try {
+        await sendMail(
+          user.email,
+          deleteCodeSubject(code),
+          deleteCodeHtml(code),
+        );
+      } catch (err) {
+        console.error("Delete code email failed:", err);
+        return res.status(502).send({
+          message:
+            "We couldn't send the email right now. Please try again in a minute.",
+        });
+      }
 
       res.sendStatus(204);
     } catch (err) {
