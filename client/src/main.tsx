@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { setupPwa } from "./lib/pwa";
 import WakeNotice from "./components/WakeNotice";
+import OfflineScreen from "./components/OfflineScreen";
 
 import "./index.css";
 import App from "./App";
@@ -65,6 +66,7 @@ createRoot(document.getElementById("root")!).render(
     <AuthProvider>
       <RouterProvider router={router} />
       <WakeNotice />
+      <OfflineScreen />
     </AuthProvider>
   </StrictMode>,
 );
