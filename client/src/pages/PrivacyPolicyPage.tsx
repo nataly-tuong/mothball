@@ -207,7 +207,7 @@ export default function PrivacyPolicyPage(): JSX.Element {
           </p>
         </Section>
 
-        <Section title="Open source">
+        {/* <Section title="Open source">
           <p className={body}>
             Mothball’s code is public at{" "}
             <a
@@ -221,7 +221,7 @@ export default function PrivacyPolicyPage(): JSX.Element {
             . This policy covers the version we host. Anyone who runs their own
             copy is responsible for their own data practices.
           </p>
-        </Section>
+        </Section> */}
 
         <Section title="Changes and contact">
           <p className={body}>
