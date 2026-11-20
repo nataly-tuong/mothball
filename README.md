@@ -8,8 +8,65 @@ Live app: [mothball-closet.vercel.app](https://mothball-closet.vercel.app/)
 
 Built with React, TypeScript, Tailwind, Express, PostgreSQL, Prisma, and Cloudinary.
 
+## Run locally
+
+Start the API in one terminal:
+
+```bash
+cd server
+cp .env.example .env
+npm install
+npx prisma migrate dev
+npm run dev
+```
+
+Then start the frontend in a second terminal:
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+The frontend runs at `http://localhost:5173`; the API defaults to `http://localhost:3001`.
+
+### Environment
+
+Create `server/.env` from the example file and provide your own values:
+
+```env
+DATABASE_URL=
+JWT_SECRET=
+FRONTEND_URL=http://localhost:5173
+
+SMTP_USER=
+SMTP_PASS=
+BREVO_API_KEY=
+MAIL_FROM_EMAIL=
+MAIL_FROM_NAME=
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+NODE_ENV=development
+TRUST_PROXY_HOPS=1
+```
+
 ## Deployment
 
 The frontend is deployed from `client/` to Vercel. Its Vercel configuration serves the single-page app and proxies `/api/*` requests to the API on Render.
 
-Deploy the backend from `server/` with `npm run build` and `npm start`. Set the required values from [`server/.env.example`](server/.env.example), including `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`, and the credentials for email, Google OAuth, and Cloudinary.
+Deploy the backend from `server/` with:
+
+```bash
+npm install
+npx prisma migrate deploy
+npm run build
+npm start
+```
+
+Set the production equivalents of the environment values above; `FRONTEND_URL` must be `https://mothball-closet.vercel.app`.
