@@ -1,6 +1,6 @@
 # Mothball
 
-A closet tracker for clothing listings.
+A closet tracker for clothing listings, with email/password sign-in, Google OAuth, image uploads, and shared closets.
 
 Live app: [mothball-closet.vercel.app](https://mothball-closet.vercel.app/)
 
